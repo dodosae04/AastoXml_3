@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>AAS Excel 转换器</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsButton" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Step1Title" xml:space="preserve">
+    <value>步骤 1：选择输入文件</value>
+  </data>
+  <data name="DragDropHint" xml:space="preserve">
+    <value>将文件拖放到这里或点击浏览。</value>
+  </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>浏览...</value>
+  </data>
+  <data name="RemoveButton" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="ClearButton" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="FileNameHeader" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="FilePathHeader" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="StatusHeader" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Step2Title" xml:space="preserve">
+    <value>步骤 2：转换选项</value>
+  </data>
+  <data name="AasVersionLabel" xml:space="preserve">
+    <value>AAS 版本</value>
+  </data>
+  <data name="Aas3Label" xml:space="preserve">
+    <value>AAS 3.0</value>
+  </data>
+  <data name="Aas2Label" xml:space="preserve">
+    <value>AAS 2.0</value>
+  </data>
+  <data name="SheetNameLabel" xml:space="preserve">
+    <value>工作表名称</value>
+  </data>
+  <data name="OutputFolderLabel" xml:space="preserve">
+    <value>输出文件夹</value>
+  </data>
+  <data name="StartButton" xml:space="preserve">
+    <value>开始转换</value>
+  </data>
+  <data name="Step3Title" xml:space="preserve">
+    <value>步骤 3：进度与结果</value>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="WarningsLabel" xml:space="preserve">
+    <value>警告数</value>
+  </data>
+  <data name="OpenWarningsButton" xml:space="preserve">
+    <value>打开 warnings.txt</value>
+  </data>
+  <data name="OpenOutputFolderButton" xml:space="preserve">
+    <value>打开输出文件夹</value>
+  </data>
+  <data name="OpenOutputFileButton" xml:space="preserve">
+    <value>打开输出文件</value>
+  </data>
+  <data name="GeneralTab" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="LanguageKorean" xml:space="preserve">
+    <value>韩语</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>英语</value>
+  </data>
+  <data name="LanguageChinese" xml:space="preserve">
+    <value>中文（简体）</value>
+  </data>
+  <data name="RememberFoldersLabel" xml:space="preserve">
+    <value>记住最近的文件夹</value>
+  </data>
+  <data name="OpenOutputFolderAfterLabel" xml:space="preserve">
+    <value>转换后打开输出文件夹</value>
+  </data>
+  <data name="OpenOutputFileAfterLabel" xml:space="preserve">
+    <value>转换后打开输出文件</value>
+  </data>
+  <data name="IdentifierTab" xml:space="preserve">
+    <value>标识符 / IRI</value>
+  </data>
+  <data name="BaseIriLabel" xml:space="preserve">
+    <value>Base IRI</value>
+  </data>
+  <data name="IdSchemeLabel" xml:space="preserve">
+    <value>IdScheme</value>
+  </data>
+  <data name="IdSchemeExampleIri" xml:space="preserve">
+    <value>ExampleIri</value>
+  </data>
+  <data name="IdSchemeUuidUrn" xml:space="preserve">
+    <value>UuidUrn</value>
+  </data>
+  <data name="ExampleIriModeLabel" xml:space="preserve">
+    <value>16 位后缀模式</value>
+  </data>
+  <data name="ExampleIriDeterministic" xml:space="preserve">
+    <value>确定性</value>
+  </data>
+  <data name="ExampleIriRandom" xml:space="preserve">
+    <value>每次运行随机</value>
+  </data>
+  <data name="DocumentationTab" xml:space="preserve">
+    <value>文档默认值</value>
+  </data>
+  <data name="IncludeAllDocumentationLabel" xml:space="preserve">
+    <value>包含所有文档</value>
+  </data>
+  <data name="DefaultLanguageLabel" xml:space="preserve">
+    <value>默认 Language01</value>
+  </data>
+  <data name="DefaultDocumentVersionIdLabel" xml:space="preserve">
+    <value>默认 DocumentVersionId</value>
+  </data>
+  <data name="DefaultSetDateLabel" xml:space="preserve">
+    <value>默认 SetDate</value>
+  </data>
+  <data name="UseFixedSetDateLabel" xml:space="preserve">
+    <value>使用固定 SetDate</value>
+  </data>
+  <data name="DefaultStatusValueLabel" xml:space="preserve">
+    <value>默认 StatusValue</value>
+  </data>
+  <data name="DefaultRoleLabel" xml:space="preserve">
+    <value>默认 Role</value>
+  </data>
+  <data name="DefaultOrganizationNameLabel" xml:space="preserve">
+    <value>默认 OrganizationName</value>
+  </data>
+  <data name="DefaultOrganizationOfficialNameLabel" xml:space="preserve">
+    <value>默认 OrganizationOfficialName</value>
+  </data>
+  <data name="WriteWarningsOnlyWhenNeededLabel" xml:space="preserve">
+    <value>仅在警告 &gt; 0 时写入 warnings.txt</value>
+  </data>
+  <data name="SaveButton" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="CancelSettingsButton" xml:space="preserve">
+    <value>取消</value>
+  </data>
+</root>

@@ -1,0 +1,346 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
+using Microsoft.Win32;
+using AasExcelToXml.Core;
+using AasExcelToXml.Wpf.Models;
+using AasExcelToXml.Wpf.Services;
+using AasExcelToXml.Wpf.ViewModels;
+
+namespace AasExcelToXml.Wpf;
+
+public partial class MainWindow : Window
+{
+    private readonly ObservableCollection<InputFileItem> _files = new();
+    private readonly ObservableCollection<string> _logs = new();
+    private AppSettings _settings = new();
+    private CancellationTokenSource? _cts;
+    private int _warningsCount;
+    private string? _lastWarningsPath;
+    private string? _lastOutputFolder;
+    private string? _lastOutputFile;
+    private bool _isConverting;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        FilesListView.ItemsSource = _files;
+        LogListBox.ItemsSource = _logs;
+        LoadSettings();
+    }
+
+    private void LoadSettings()
+    {
+        _settings = SettingsService.Load();
+        LocalizationService.Instance.SetCulture(_settings.Language);
+        if (_settings.RememberLastFolders)
+        {
+            if (!string.IsNullOrWhiteSpace(_settings.LastOutputFolder))
+            {
+                OutputFolderTextBox.Text = _settings.LastOutputFolder;
+            }
+        }
+    }
+
+    private void SaveSettings()
+    {
+        SettingsService.Save(_settings);
+    }
+
+    private void BrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Excel files (*.xlsx)|*.xlsx|CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+            Multiselect = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        AddFiles(dialog.FileNames);
+    }
+
+    private void AddFiles(IEnumerable<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            if (_files.Any(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            _files.Add(new InputFileItem(path));
+        }
+    }
+
+    private void RemoveButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = FilesListView.SelectedItems.Cast<InputFileItem>().ToList();
+        foreach (var item in selected)
+        {
+            _files.Remove(item);
+        }
+    }
+
+    private void ClearButton_Click(object sender, RoutedEventArgs e)
+    {
+        _files.Clear();
+    }
+
+    private void DropZone_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void DropZone_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            return;
+        }
+
+        var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        AddFiles(files);
+    }
+
+    private void OutputBrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = "Select output folder"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        OutputFolderTextBox.Text = dialog.FolderName;
+    }
+
+    private async void StartButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isConverting)
+        {
+            return;
+        }
+
+        if (_files.Count == 0)
+        {
+            AddLog("입력 파일이 없습니다.");
+            return;
+        }
+
+        var outputFolder = OutputFolderTextBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(outputFolder))
+        {
+            AddLog("출력 폴더를 선택하세요.");
+            return;
+        }
+
+        Directory.CreateDirectory(outputFolder);
+
+        _warningsCount = 0;
+        UpdateWarningsDisplay();
+        _lastWarningsPath = null;
+        _lastOutputFolder = outputFolder;
+        _lastOutputFile = null;
+
+        foreach (var file in _files)
+        {
+            file.Status = string.Empty;
+        }
+
+        _cts = new CancellationTokenSource();
+        _isConverting = true;
+        SetUiEnabled(false);
+        ProgressBar.Value = 0;
+        ProgressBar.Maximum = _files.Count;
+
+        _settings.LastOutputFolder = outputFolder;
+        if (_settings.RememberLastFolders)
+        {
+            _settings.LastInputFolder = Path.GetDirectoryName(_files[0].Path);
+        }
+        SaveSettings();
+
+        var sheetName = string.IsNullOrWhiteSpace(SheetNameTextBox.Text) ? null : SheetNameTextBox.Text.Trim();
+        var targetVersion = Aas3Radio.IsChecked == true ? AasVersion.Aas3_0 : AasVersion.Aas2_0;
+
+        for (var i = 0; i < _files.Count; i++)
+        {
+            if (_cts.IsCancellationRequested)
+            {
+                AddLog("변환 취소 요청됨. 남은 파일은 건너뜁니다.");
+                break;
+            }
+
+            var file = _files[i];
+            file.Status = "Processing";
+            AddLog($"{file.FileName} 변환 시작...");
+
+            var outputPath = Path.Combine(outputFolder, BuildOutputFileName(file.Path, targetVersion));
+            var options = BuildOptions(file.Path, targetVersion);
+
+            try
+            {
+                var result = await Task.Run(() => Converter.Convert(file.Path, outputPath, sheetName, options));
+                file.Status = "Done";
+                _warningsCount += result.Diagnostics.WarningCount;
+                _lastWarningsPath = result.Diagnostics.WarningCount > 0 ? result.WarningsPath : _lastWarningsPath;
+                _lastOutputFile = result.OutputPath;
+                AddLog($"완료: {file.FileName}");
+            }
+            catch (Exception ex)
+            {
+                file.Status = "Failed";
+                AddLog($"오류: {file.FileName} - {ex.Message}");
+            }
+
+            ProgressBar.Value = i + 1;
+            UpdateWarningsDisplay();
+        }
+
+        _isConverting = false;
+        SetUiEnabled(true);
+
+        if (_settings.OpenOutputFolderAfterConversion)
+        {
+            OpenPath(_lastOutputFolder);
+        }
+
+        if (_settings.OpenOutputFileAfterConversion)
+        {
+            OpenPath(_lastOutputFile);
+        }
+    }
+
+    private ConvertOptions BuildOptions(string inputPath, AasVersion version)
+    {
+        var setDate = _settings.UseFixedSetDate
+            ? _settings.FixedSetDate
+            : string.Empty;
+
+        return new ConvertOptions
+        {
+            Version = version,
+            IncludeAllDocumentation = _settings.IncludeAllDocumentation,
+            BaseIri = _settings.BaseIri,
+            IdScheme = _settings.IdScheme,
+            ExampleIriDigitsMode = _settings.ExampleIriDigitsMode,
+            DocumentDefaultLanguage = _settings.DefaultLanguage01,
+            DocumentDefaultVersionId = _settings.DefaultDocumentVersionId,
+            UseFixedSetDate = _settings.UseFixedSetDate,
+            DocumentDefaultSetDate = setDate,
+            DocumentDefaultStatusValue = _settings.DefaultStatusValue,
+            DocumentDefaultRole = _settings.DefaultRole,
+            DocumentDefaultOrganizationName = _settings.DefaultOrganizationName,
+            DocumentDefaultOrganizationOfficialName = _settings.DefaultOrganizationOfficialName,
+            WriteWarningsOnlyWhenNeeded = _settings.WriteWarningsOnlyWhenNeeded,
+            InputFileName = Path.GetFileNameWithoutExtension(inputPath)
+        };
+    }
+
+    private static string BuildOutputFileName(string inputPath, AasVersion version)
+    {
+        var baseName = Path.GetFileNameWithoutExtension(inputPath);
+        return version == AasVersion.Aas3_0
+            ? $"{baseName}.aas3.xml"
+            : $"{baseName}.aas.xml";
+    }
+
+    private void CancelButton_Click(object sender, RoutedEventArgs e)
+    {
+        _cts?.Cancel();
+    }
+
+    private void UpdateWarningsDisplay()
+    {
+        WarningsCountText.Text = _warningsCount.ToString(CultureInfo.InvariantCulture);
+        WarningsButton.IsEnabled = _warningsCount > 0 && !string.IsNullOrWhiteSpace(_lastWarningsPath);
+        OpenOutputFolderButton.IsEnabled = !string.IsNullOrWhiteSpace(_lastOutputFolder);
+        OpenOutputFileButton.IsEnabled = !string.IsNullOrWhiteSpace(_lastOutputFile);
+    }
+
+    private void AddLog(string message)
+    {
+        _logs.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
+        LogListBox.ScrollIntoView(_logs.LastOrDefault());
+    }
+
+    private void SetUiEnabled(bool enabled)
+    {
+        BrowseButton.IsEnabled = enabled;
+        RemoveButton.IsEnabled = enabled;
+        ClearButton.IsEnabled = enabled;
+        OutputFolderTextBox.IsEnabled = enabled;
+        SheetNameTextBox.IsEnabled = enabled;
+        Aas3Radio.IsEnabled = enabled;
+        Aas2Radio.IsEnabled = enabled;
+        StartButton.IsEnabled = enabled;
+        SettingsButton.IsEnabled = enabled;
+    }
+
+    private void WarningsButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenPath(_lastWarningsPath);
+    }
+
+    private void OpenOutputFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenPath(_lastOutputFolder);
+    }
+
+    private void OpenOutputFileButton_Click(object sender, RoutedEventArgs e)
+    {
+        OpenPath(_lastOutputFile);
+    }
+
+    private static void OpenPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Ignore launch errors.
+        }
+    }
+    
+    private void SettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var viewModel = SettingsViewModel.FromSettings(_settings.Clone());
+        var dialog = new SettingsWindow(viewModel)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            viewModel.ApplyTo(_settings);
+            SaveSettings();
+        }
+    }
+}

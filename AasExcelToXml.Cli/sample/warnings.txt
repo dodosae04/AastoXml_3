@@ -1,0 +1,9 @@
+AAS 변환 경고 리포트
+- 자동 보정: 0
+- 깨진 참조(Entity): 2
+  - AAS=Robot_body, Submodel=Assembly_information, Entity=Brake_list, Reference=Brake_list
+  - AAS=Arm_brakes, Submodel=Assembly_information, Entity=Brake_list, Reference=Brake_list
+- 깨진 참조(Relationship): 0
+- 타입 자동 교정: 0
+- 중복 idShort: 0
+- AAS3 구조 검증: 0

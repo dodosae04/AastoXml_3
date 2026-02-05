@@ -1,0 +1,133 @@
+<Window x:Class="AasExcelToXml.Wpf.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AasExcelToXml.Wpf.Services"
+        Title="{local:Loc Key=SettingsTitle}" Height="560" Width="720"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <DockPanel Margin="16">
+        <TabControl>
+            <TabItem Header="{local:Loc Key=GeneralTab}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=LanguageLabel}" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{Binding Language, Mode=TwoWay}">
+                        <ComboBoxItem Tag="ko-KR" Content="{local:Loc Key=LanguageKorean}" />
+                        <ComboBoxItem Tag="en" Content="{local:Loc Key=LanguageEnglish}" />
+                        <ComboBoxItem Tag="zh-Hans" Content="{local:Loc Key=LanguageChinese}" />
+                    </ComboBox>
+
+                    <CheckBox Grid.Row="1" Grid.Column="1" Margin="0,12,0,0"
+                              Content="{local:Loc Key=RememberFoldersLabel}"
+                              IsChecked="{Binding RememberLastFolders}" />
+
+                    <CheckBox Grid.Row="2" Grid.Column="1" Margin="0,12,0,0"
+                              Content="{local:Loc Key=OpenOutputFolderAfterLabel}"
+                              IsChecked="{Binding OpenOutputFolderAfterConversion}" />
+
+                    <CheckBox Grid.Row="3" Grid.Column="1" Margin="0,12,0,0"
+                              Content="{local:Loc Key=OpenOutputFileAfterLabel}"
+                              IsChecked="{Binding OpenOutputFileAfterConversion}" />
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="{local:Loc Key=IdentifierTab}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=BaseIriLabel}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding BaseIri}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=IdSchemeLabel}" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,12,0,0" SelectedValuePath="Tag" SelectedValue="{Binding IdScheme}">
+                        <ComboBoxItem Tag="ExampleIri" Content="{local:Loc Key=IdSchemeExampleIri}" />
+                        <ComboBoxItem Tag="UuidUrn" Content="{local:Loc Key=IdSchemeUuidUrn}" />
+                    </ComboBox>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=ExampleIriModeLabel}" />
+                    <ComboBox Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" SelectedValuePath="Tag" SelectedValue="{Binding ExampleIriDigitsMode}">
+                        <ComboBoxItem Tag="DeterministicHash" Content="{local:Loc Key=ExampleIriDeterministic}" />
+                        <ComboBoxItem Tag="RandomSecure" Content="{local:Loc Key=ExampleIriRandom}" />
+                    </ComboBox>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="{local:Loc Key=DocumentationTab}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox Grid.Row="0" Grid.ColumnSpan="2" Content="{local:Loc Key=IncludeAllDocumentationLabel}"
+                              IsChecked="{Binding IncludeAllDocumentation}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultLanguageLabel}" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultLanguage01}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultDocumentVersionIdLabel}" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultDocumentVersionId}" />
+
+                    <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Margin="0,12,0,0" Content="{local:Loc Key=UseFixedSetDateLabel}"
+                              IsChecked="{Binding UseFixedSetDate}" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Margin="0,8,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultSetDateLabel}" />
+                    <DatePicker Grid.Row="4" Grid.Column="1" Margin="0,8,0,0" SelectedDate="{Binding FixedSetDate}" />
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultStatusValueLabel}" />
+                    <TextBox Grid.Row="5" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultStatusValue}" />
+
+                    <TextBlock Grid.Row="6" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultRoleLabel}" />
+                    <TextBox Grid.Row="6" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultRole}" />
+
+                    <TextBlock Grid.Row="7" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultOrganizationNameLabel}" />
+                    <TextBox Grid.Row="7" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultOrganizationName}" />
+
+                    <TextBlock Grid.Row="8" Grid.Column="0" Margin="0,12,0,0" VerticalAlignment="Center" Text="{local:Loc Key=DefaultOrganizationOfficialNameLabel}" />
+                    <TextBox Grid.Row="8" Grid.Column="1" Margin="0,12,0,0" Text="{Binding DefaultOrganizationOfficialName}" />
+
+                    <CheckBox Grid.Row="9" Grid.ColumnSpan="2" Margin="0,12,0,0" Content="{local:Loc Key=WriteWarningsOnlyWhenNeededLabel}"
+                              IsChecked="{Binding WriteWarningsOnlyWhenNeeded}" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Width="110" Margin="0,0,8,0" Click="SaveButton_Click">
+                <TextBlock Text="{local:Loc Key=SaveButton}" />
+            </Button>
+            <Button Width="110" Click="CancelButton_Click">
+                <TextBlock Text="{local:Loc Key=CancelSettingsButton}" />
+            </Button>
+        </StackPanel>
+    </DockPanel>
+</Window>

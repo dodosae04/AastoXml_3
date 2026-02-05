@@ -1,0 +1,129 @@
+<Window x:Class="AasExcelToXml.Wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AasExcelToXml.Wpf.Services"
+        Title="AAS Excel to XML Converter" Height="760" Width="1100"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="SettingsButton" Width="110" Margin="0,0,0,8" Click="SettingsButton_Click">
+                <TextBlock Text="{local:Loc Key=SettingsButton}" />
+            </Button>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <GroupBox Header="Step 1: Select Files" Margin="0,0,0,12">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border x:Name="DropZone" Grid.Row="0" BorderBrush="#7A7A7A" BorderThickness="2"
+                                CornerRadius="8" Padding="16" AllowDrop="True"
+                                DragOver="DropZone_DragOver" Drop="DropZone_Drop">
+                            <TextBlock Text="Drag and drop Excel files here" FontSize="14" Foreground="#555" />
+                        </Border>
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,12">
+                            <Button x:Name="BrowseButton" Width="110" Click="BrowseButton_Click">
+                                <TextBlock Text="{local:Loc Key=BrowseButton}" />
+                            </Button>
+                            <Button x:Name="RemoveButton" Width="110" Margin="8,0,0,0" Click="RemoveButton_Click">
+                                <TextBlock Text="{local:Loc Key=RemoveButton}" />
+                            </Button>
+                            <Button x:Name="ClearButton" Width="110" Margin="8,0,0,0" Click="ClearButton_Click">
+                                <TextBlock Text="{local:Loc Key=ClearButton}" />
+                            </Button>
+                        </StackPanel>
+                        <ListView x:Name="FilesListView" Grid.Row="2" Height="200" SelectionMode="Extended">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="{local:Loc Key=FileNameHeader}" DisplayMemberBinding="{Binding FileName}" Width="220" />
+                                    <GridViewColumn Header="{local:Loc Key=FilePathHeader}" DisplayMemberBinding="{Binding Path}" Width="520" />
+                                    <GridViewColumn Header="{local:Loc Key=StatusHeader}" DisplayMemberBinding="{Binding Status}" Width="150" />
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="{local:Loc Key=Step2Title}" Margin="0,0,0,12">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="120" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=AasVersionLabel}" />
+                        <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                            <RadioButton x:Name="Aas3Radio" GroupName="AasVersion" IsChecked="True" Margin="0,0,16,0">
+                                <TextBlock Text="{local:Loc Key=Aas3Label}" />
+                            </RadioButton>
+                            <RadioButton x:Name="Aas2Radio" GroupName="AasVersion">
+                                <TextBlock Text="{local:Loc Key=Aas2Label}" />
+                            </RadioButton>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=SheetNameLabel}" />
+                        <TextBox x:Name="SheetNameTextBox" Grid.Row="1" Grid.Column="1" Text="사양시트" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=OutputFolderLabel}" />
+                        <TextBox x:Name="OutputFolderTextBox" Grid.Row="2" Grid.Column="1" />
+                        <Button Grid.Row="2" Grid.Column="2" Click="OutputBrowseButton_Click">
+                            <TextBlock Text="{local:Loc Key=BrowseButton}" />
+                        </Button>
+
+                        <Button x:Name="StartButton" Grid.Row="3" Grid.Column="1" Width="160" Margin="0,12,0,0" HorizontalAlignment="Left" Click="StartButton_Click">
+                            <TextBlock Text="{local:Loc Key=StartButton}" />
+                        </Button>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Header="{local:Loc Key=Step3Title}">
+                    <Grid Margin="12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <ProgressBar x:Name="ProgressBar" Width="520" Height="20" Minimum="0" Maximum="100" />
+                            <Button x:Name="CancelButton" Width="110" Margin="12,0,0,0" Click="CancelButton_Click">
+                                <TextBlock Text="{local:Loc Key=CancelButton}" />
+                            </Button>
+                        </StackPanel>
+
+                        <ListBox x:Name="LogListBox" Grid.Row="1" Height="180" Margin="0,12,0,12" />
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="{local:Loc Key=WarningsLabel}" />
+                            <TextBlock x:Name="WarningsCountText" Margin="8,0,0,0" Text="0" />
+                            <Button x:Name="WarningsButton" Width="180" Margin="16,0,0,0" Click="WarningsButton_Click" IsEnabled="False">
+                                <TextBlock Text="{local:Loc Key=OpenWarningsButton}" />
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="OpenOutputFolderButton" Width="180" Click="OpenOutputFolderButton_Click" IsEnabled="False">
+                                <TextBlock Text="{local:Loc Key=OpenOutputFolderButton}" />
+                            </Button>
+                            <Button x:Name="OpenOutputFileButton" Width="180" Margin="12,0,0,0" Click="OpenOutputFileButton_Click" IsEnabled="False">
+                                <TextBlock Text="{local:Loc Key=OpenOutputFileButton}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

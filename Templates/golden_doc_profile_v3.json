@@ -1,0 +1,388 @@
+{
+  "documentCollectionIdShortPattern": "Document{N}",
+  "documentVersionIdShort": "DocumentVersion01",
+  "documentCollectionCategory": "CONSTANT",
+  "documentCollectionOrdered": false,
+  "documentCollectionAllowDuplicates": false,
+  "documentCollectionSemanticId": {
+    "type": "ExternalReference",
+    "keys": [
+      {
+        "type": "GlobalReference",
+        "local": false,
+        "idType": "IRI",
+        "value": "http://admin-shell.io/vdi/2770/1/0/Document"
+      }
+    ]
+  },
+  "documentCollectionHasQualifier": false,
+  "documentFields": [
+    {
+      "kind": "Property",
+      "idShort": "DocumentId",
+      "useEmptyValueType": true,
+      "category": "CONSTANT",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentId/Id"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [],
+      "langStrings": []
+    },
+    {
+      "kind": "Property",
+      "idShort": "IsPrimaryDocumentId",
+      "useEmptyValueType": true,
+      "category": "CONSTANT",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentId/isPrimary"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [],
+      "langStrings": []
+    },
+    {
+      "kind": "Property",
+      "idShort": "DocumentClassId",
+      "useEmptyValueType": true,
+      "category": "CONSTANT",
+      "defaultValue": "02-01",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentClassification/ClassId"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [],
+      "langStrings": []
+    },
+    {
+      "kind": "Property",
+      "idShort": "DocumentClassName",
+      "useEmptyValueType": true,
+      "category": "CONSTANT",
+      "defaultValue": "Technical specifiction",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentClassification/ClassName"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [],
+      "langStrings": []
+    },
+    {
+      "kind": "Property",
+      "idShort": "DocumentClassificationSystem",
+      "useEmptyValueType": true,
+      "category": "CONSTANT",
+      "defaultValue": "VDI2770:2018",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentClassification/ClassificationSystem"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [],
+      "langStrings": []
+    },
+    {
+      "kind": "SubmodelElementCollection",
+      "idShort": "DocumentVersion01",
+      "category": "CONSTANT",
+      "ordered": false,
+      "allowDuplicates": false,
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "GlobalReference",
+            "local": false,
+            "idType": "IRI",
+            "value": "http://admin-shell.io/vdi/2770/1/0/DocumentVersion"
+          }
+        ]
+      },
+      "hasQualifier": false,
+      "children": [
+        {
+          "kind": "Property",
+          "idShort": "Language01",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "kr",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/DocumentVersion/Language"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "Property",
+          "idShort": "DocumentVersionId",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "V1.2",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/DocumentVersion/DocumentVersionId"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "MultiLanguageProperty",
+          "idShort": "Title",
+          "category": "CONSTANT",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/Description/Title"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": [
+            {
+              "lang": "EN",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "kind": "MultiLanguageProperty",
+          "idShort": "Summary",
+          "category": "CONSTANT",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/DocumentDescription/Summary"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": [
+            {
+              "lang": "kr",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "kind": "MultiLanguageProperty",
+          "idShort": "KeyWords",
+          "category": "CONSTANT",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/DocumentDescription/KeyWords"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": [
+            {
+              "lang": "kr",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "kind": "Property",
+          "idShort": "SetDate",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/LifeCycleStatus/SetDate"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "Property",
+          "idShort": "StatusValue",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "Released",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/LifeCycleStatus/StatusValue"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "Property",
+          "idShort": "Role",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "Author",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/Party/Role"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "Property",
+          "idShort": "OrganizationName",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "Hanuri",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/Organization/OrganizationName"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "Property",
+          "idShort": "OrganizationOfficialName",
+          "useEmptyValueType": true,
+          "category": "CONSTANT",
+          "defaultValue": "Hanuri",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/Organization/OrganizationOfficialName"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        },
+        {
+          "kind": "File",
+          "idShort": "DigitalFile",
+          "defaultValue": "",
+          "category": "CONSTANT",
+          "mimeType": "application/pdf",
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "local": false,
+                "idType": "IRI",
+                "value": "http://admin-shell.io/vdi/2770/1/0/StoredDocumentRepresentation/DigitalFile"
+              }
+            ]
+          },
+          "hasQualifier": false,
+          "children": [],
+          "langStrings": []
+        }
+      ],
+      "langStrings": []
+    }
+  ],
+  "filePattern": {
+    "basePath": "/aasx/files/"
+  }
+}

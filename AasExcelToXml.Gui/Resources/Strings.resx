@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>AAS Converter</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="MenuAbout" xml:space="preserve">
+    <value>정보</value>
+  </data>
+  <data name="DropHint" xml:space="preserve">
+    <value>여기로 .xlsx / .csv 파일을 끌어 놓으세요.</value>
+  </data>
+  <data name="ButtonAddFiles" xml:space="preserve">
+    <value>파일 추가</value>
+  </data>
+  <data name="ButtonRemoveSelected" xml:space="preserve">
+    <value>선택 제거</value>
+  </data>
+  <data name="ButtonClearQueue" xml:space="preserve">
+    <value>목록 비우기</value>
+  </data>
+  <data name="ButtonBrowse" xml:space="preserve">
+    <value>찾아보기</value>
+  </data>
+  <data name="ButtonConvert" xml:space="preserve">
+    <value>변환 시작</value>
+  </data>
+  <data name="ButtonCancel" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="ButtonOpenWarnings" xml:space="preserve">
+    <value>warnings.txt 열기</value>
+  </data>
+  <data name="RadioAas2" xml:space="preserve">
+    <value>AAS 2.0</value>
+  </data>
+  <data name="RadioAas3" xml:space="preserve">
+    <value>AAS 3.0</value>
+  </data>
+  <data name="LabelOutputFolder" xml:space="preserve">
+    <value>출력 폴더</value>
+  </data>
+  <data name="LabelSheetName" xml:space="preserve">
+    <value>시트명</value>
+  </data>
+  <data name="LabelVersion" xml:space="preserve">
+    <value>AAS 버전</value>
+  </data>
+  <data name="LabelLog" xml:space="preserve">
+    <value>로그</value>
+  </data>
+  <data name="ColumnFile" xml:space="preserve">
+    <value>파일</value>
+  </data>
+  <data name="ColumnStatus" xml:space="preserve">
+    <value>상태</value>
+  </data>
+  <data name="LabelQueue" xml:space="preserve">
+    <value>입력 파일</value>
+  </data>
+  <data name="LabelOptions" xml:space="preserve">
+    <value>변환 옵션</value>
+  </data>
+  <data name="LabelProgress" xml:space="preserve">
+    <value>진행 상태</value>
+  </data>
+  <data name="StatusPending" xml:space="preserve">
+    <value>대기</value>
+  </data>
+  <data name="StatusCompleted" xml:space="preserve">
+    <value>완료</value>
+  </data>
+  <data name="StatusFailed" xml:space="preserve">
+    <value>실패</value>
+  </data>
+  <data name="StatusCanceled" xml:space="preserve">
+    <value>취소</value>
+  </data>
+  <data name="LogAddedFiles" xml:space="preserve">
+    <value>파일 추가: {0}</value>
+  </data>
+  <data name="LogRemovedFiles" xml:space="preserve">
+    <value>파일 제거: {0}</value>
+  </data>
+  <data name="LogClearedQueue" xml:space="preserve">
+    <value>큐가 비워졌습니다.</value>
+  </data>
+  <data name="LogSelectedOutputFolder" xml:space="preserve">
+    <value>출력 폴더 선택: {0}</value>
+  </data>
+  <data name="LogStartConversion" xml:space="preserve">
+    <value>변환 시작...</value>
+  </data>
+  <data name="LogConvertingFile" xml:space="preserve">
+    <value>변환 중: {0}</value>
+  </data>
+  <data name="LogConversionCompleted" xml:space="preserve">
+    <value>변환 완료: {0}</value>
+  </data>
+  <data name="LogConversionFailed" xml:space="preserve">
+    <value>오류: {0}</value>
+  </data>
+  <data name="LogWarnings" xml:space="preserve">
+    <value>경고 {0}건이 있습니다.</value>
+  </data>
+  <data name="LogConversionCanceled" xml:space="preserve">
+    <value>변환이 취소되었습니다.</value>
+  </data>
+  <data name="LogNoWarnings" xml:space="preserve">
+    <value>경고가 없습니다.</value>
+  </data>
+  <data name="LogCancelRequested" xml:space="preserve">
+    <value>취소 요청됨. 현재 파일 완료 후 중지합니다.</value>
+  </data>
+  <data name="MessageNoFiles" xml:space="preserve">
+    <value>변환할 파일을 추가하세요.</value>
+  </data>
+  <data name="MessageInvalidOutputFolder" xml:space="preserve">
+    <value>출력 폴더를 선택하세요.</value>
+  </data>
+  <data name="MessageConversionComplete" xml:space="preserve">
+    <value>변환이 완료되었습니다.</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>설정</value>
+  </data>
+  <data name="SettingsLanguage" xml:space="preserve">
+    <value>언어</value>
+  </data>
+  <data name="SettingsIdScheme" xml:space="preserve">
+    <value>ID 스킴</value>
+  </data>
+  <data name="SettingsDigitsMode" xml:space="preserve">
+    <value>16자리 방식</value>
+  </data>
+  <data name="SettingsDigitsModeDeterministic" xml:space="preserve">
+    <value>결정적 (해시)</value>
+  </data>
+  <data name="SettingsDigitsModeRandom" xml:space="preserve">
+    <value>랜덤 (보안)</value>
+  </data>
+  <data name="SettingsDefaultSheet" xml:space="preserve">
+    <value>기본 시트명</value>
+  </data>
+  <data name="SettingsDocumentIdSeed" xml:space="preserve">
+    <value>DocumentIdSeed</value>
+  </data>
+  <data name="SettingsBaseIri" xml:space="preserve">
+    <value>Base IRI</value>
+  </data>
+  <data name="SettingsIncludeAllDocs" xml:space="preserve">
+    <value>모든 문서 포함</value>
+  </data>
+  <data name="SettingsIncludeKoreanDesc" xml:space="preserve">
+    <value>한국어 설명 포함</value>
+  </data>
+  <data name="SettingsRememberFolders" xml:space="preserve">
+    <value>마지막 입력/출력 폴더 기억</value>
+  </data>
+  <data name="SettingsAfterOpenFolder" xml:space="preserve">
+    <value>변환 후 출력 폴더 열기</value>
+  </data>
+  <data name="SettingsAfterOpenFile" xml:space="preserve">
+    <value>변환 후 출력 파일 열기</value>
+  </data>
+  <data name="SettingsWarningsOnly" xml:space="preserve">
+    <value>경고가 있을 때만 warnings.txt 생성</value>
+  </data>
+  <data name="SettingsOk" xml:space="preserve">
+    <value>확인</value>
+  </data>
+  <data name="SettingsCancel" xml:space="preserve">
+    <value>닫기</value>
+  </data>
+  <data name="LanguageKorean" xml:space="preserve">
+    <value>한국어</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageChinese" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="IdSchemeExampleIri" xml:space="preserve">
+    <value>Example IRI</value>
+  </data>
+  <data name="IdSchemeUuidUrn" xml:space="preserve">
+    <value>UUID URN</value>
+  </data>
+  <data name="MessageInvalidDocumentIdSeed" xml:space="preserve">
+    <value>DocumentIdSeed 값이 올바르지 않습니다.</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>정보</value>
+  </data>
+  <data name="AboutVersionLabel" xml:space="preserve">
+    <value>버전</value>
+  </data>
+  <data name="AboutRepoLabel" xml:space="preserve">
+    <value>리포지토리</value>
+  </data>
+  <data name="AboutCopyright" xml:space="preserve">
+    <value>© AasExcelToXml</value>
+  </data>
+</root>

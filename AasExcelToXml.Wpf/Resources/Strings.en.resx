@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>AAS Excel Converter</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsButton" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Step1Title" xml:space="preserve">
+    <value>Step 1. Select input files</value>
+  </data>
+  <data name="DragDropHint" xml:space="preserve">
+    <value>Drag &amp; drop files here or click Browse.</value>
+  </data>
+  <data name="BrowseButton" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="RemoveButton" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ClearButton" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="FileNameHeader" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="FilePathHeader" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="StatusHeader" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Step2Title" xml:space="preserve">
+    <value>Step 2. Conversion options</value>
+  </data>
+  <data name="AasVersionLabel" xml:space="preserve">
+    <value>AAS version</value>
+  </data>
+  <data name="Aas3Label" xml:space="preserve">
+    <value>AAS 3.0</value>
+  </data>
+  <data name="Aas2Label" xml:space="preserve">
+    <value>AAS 2.0</value>
+  </data>
+  <data name="SheetNameLabel" xml:space="preserve">
+    <value>Sheet name</value>
+  </data>
+  <data name="OutputFolderLabel" xml:space="preserve">
+    <value>Output folder</value>
+  </data>
+  <data name="StartButton" xml:space="preserve">
+    <value>Start conversion</value>
+  </data>
+  <data name="Step3Title" xml:space="preserve">
+    <value>Step 3. Progress &amp; results</value>
+  </data>
+  <data name="CancelButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="WarningsLabel" xml:space="preserve">
+    <value>Warnings</value>
+  </data>
+  <data name="OpenWarningsButton" xml:space="preserve">
+    <value>Open warnings.txt</value>
+  </data>
+  <data name="OpenOutputFolderButton" xml:space="preserve">
+    <value>Open output folder</value>
+  </data>
+  <data name="OpenOutputFileButton" xml:space="preserve">
+    <value>Open output file</value>
+  </data>
+  <data name="GeneralTab" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="LanguageLabel" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="LanguageKorean" xml:space="preserve">
+    <value>Korean</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LanguageChinese" xml:space="preserve">
+    <value>Chinese (Simplified)</value>
+  </data>
+  <data name="RememberFoldersLabel" xml:space="preserve">
+    <value>Remember last folders</value>
+  </data>
+  <data name="OpenOutputFolderAfterLabel" xml:space="preserve">
+    <value>Open output folder after conversion</value>
+  </data>
+  <data name="OpenOutputFileAfterLabel" xml:space="preserve">
+    <value>Open output file after conversion</value>
+  </data>
+  <data name="IdentifierTab" xml:space="preserve">
+    <value>Identifier / IRI</value>
+  </data>
+  <data name="BaseIriLabel" xml:space="preserve">
+    <value>Base IRI</value>
+  </data>
+  <data name="IdSchemeLabel" xml:space="preserve">
+    <value>IdScheme</value>
+  </data>
+  <data name="IdSchemeExampleIri" xml:space="preserve">
+    <value>ExampleIri</value>
+  </data>
+  <data name="IdSchemeUuidUrn" xml:space="preserve">
+    <value>UuidUrn</value>
+  </data>
+  <data name="ExampleIriModeLabel" xml:space="preserve">
+    <value>16-digit suffix mode</value>
+  </data>
+  <data name="ExampleIriDeterministic" xml:space="preserve">
+    <value>Deterministic</value>
+  </data>
+  <data name="ExampleIriRandom" xml:space="preserve">
+    <value>Random per run</value>
+  </data>
+  <data name="DocumentationTab" xml:space="preserve">
+    <value>Documentation defaults</value>
+  </data>
+  <data name="IncludeAllDocumentationLabel" xml:space="preserve">
+    <value>Include all documentation</value>
+  </data>
+  <data name="DefaultLanguageLabel" xml:space="preserve">
+    <value>Default Language01</value>
+  </data>
+  <data name="DefaultDocumentVersionIdLabel" xml:space="preserve">
+    <value>Default DocumentVersionId</value>
+  </data>
+  <data name="DefaultSetDateLabel" xml:space="preserve">
+    <value>Default SetDate</value>
+  </data>
+  <data name="UseFixedSetDateLabel" xml:space="preserve">
+    <value>Use fixed SetDate</value>
+  </data>
+  <data name="DefaultStatusValueLabel" xml:space="preserve">
+    <value>Default StatusValue</value>
+  </data>
+  <data name="DefaultRoleLabel" xml:space="preserve">
+    <value>Default Role</value>
+  </data>
+  <data name="DefaultOrganizationNameLabel" xml:space="preserve">
+    <value>Default OrganizationName</value>
+  </data>
+  <data name="DefaultOrganizationOfficialNameLabel" xml:space="preserve">
+    <value>Default OrganizationOfficialName</value>
+  </data>
+  <data name="WriteWarningsOnlyWhenNeededLabel" xml:space="preserve">
+    <value>Write warnings.txt only if warnings &gt; 0</value>
+  </data>
+  <data name="SaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CancelSettingsButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+</root>

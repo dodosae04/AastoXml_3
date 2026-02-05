@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>AAS 转换器</value>
+  </data>
+  <data name="MenuSettings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="MenuAbout" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="DropHint" xml:space="preserve">
+    <value>将 .xlsx / .csv 文件拖放到此处。</value>
+  </data>
+  <data name="ButtonAddFiles" xml:space="preserve">
+    <value>添加文件</value>
+  </data>
+  <data name="ButtonRemoveSelected" xml:space="preserve">
+    <value>移除所选</value>
+  </data>
+  <data name="ButtonClearQueue" xml:space="preserve">
+    <value>清空队列</value>
+  </data>
+  <data name="ButtonBrowse" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="ButtonConvert" xml:space="preserve">
+    <value>开始转换</value>
+  </data>
+  <data name="ButtonCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="ButtonOpenWarnings" xml:space="preserve">
+    <value>打开 warnings.txt</value>
+  </data>
+  <data name="RadioAas2" xml:space="preserve">
+    <value>AAS 2.0</value>
+  </data>
+  <data name="RadioAas3" xml:space="preserve">
+    <value>AAS 3.0</value>
+  </data>
+  <data name="LabelOutputFolder" xml:space="preserve">
+    <value>输出文件夹</value>
+  </data>
+  <data name="LabelSheetName" xml:space="preserve">
+    <value>工作表名称</value>
+  </data>
+  <data name="LabelVersion" xml:space="preserve">
+    <value>AAS 版本</value>
+  </data>
+  <data name="LabelLog" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="ColumnFile" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="ColumnStatus" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="LabelQueue" xml:space="preserve">
+    <value>输入文件</value>
+  </data>
+  <data name="LabelOptions" xml:space="preserve">
+    <value>转换选项</value>
+  </data>
+  <data name="LabelProgress" xml:space="preserve">
+    <value>进度</value>
+  </data>
+  <data name="StatusPending" xml:space="preserve">
+    <value>待处理</value>
+  </data>
+  <data name="StatusCompleted" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="StatusFailed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="StatusCanceled" xml:space="preserve">
+    <value>已取消</value>
+  </data>
+  <data name="LogAddedFiles" xml:space="preserve">
+    <value>已添加文件：{0}</value>
+  </data>
+  <data name="LogRemovedFiles" xml:space="preserve">
+    <value>已移除文件：{0}</value>
+  </data>
+  <data name="LogClearedQueue" xml:space="preserve">
+    <value>队列已清空。</value>
+  </data>
+  <data name="LogSelectedOutputFolder" xml:space="preserve">
+    <value>选择输出文件夹：{0}</value>
+  </data>
+  <data name="LogStartConversion" xml:space="preserve">
+    <value>开始转换...</value>
+  </data>
+  <data name="LogConvertingFile" xml:space="preserve">
+    <value>转换中：{0}</value>
+  </data>
+  <data name="LogConversionCompleted" xml:space="preserve">
+    <value>转换完成：{0}</value>
+  </data>
+  <data name="LogConversionFailed" xml:space="preserve">
+    <value>错误：{0}</value>
+  </data>
+  <data name="LogWarnings" xml:space="preserve">
+    <value>发现 {0} 条警告。</value>
+  </data>
+  <data name="LogConversionCanceled" xml:space="preserve">
+    <value>转换已取消。</value>
+  </data>
+  <data name="LogNoWarnings" xml:space="preserve">
+    <value>无警告。</value>
+  </data>
+  <data name="LogCancelRequested" xml:space="preserve">
+    <value>已请求取消，将跳过剩余文件。</value>
+  </data>
+  <data name="MessageNoFiles" xml:space="preserve">
+    <value>请添加要转换的文件。</value>
+  </data>
+  <data name="MessageInvalidOutputFolder" xml:space="preserve">
+    <value>请选择输出文件夹。</value>
+  </data>
+  <data name="MessageConversionComplete" xml:space="preserve">
+    <value>转换完成。</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsLanguage" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="SettingsIdScheme" xml:space="preserve">
+    <value>ID 方案</value>
+  </data>
+  <data name="SettingsDigitsMode" xml:space="preserve">
+    <value>16 位模式</value>
+  </data>
+  <data name="SettingsDigitsModeDeterministic" xml:space="preserve">
+    <value>确定性（哈希）</value>
+  </data>
+  <data name="SettingsDigitsModeRandom" xml:space="preserve">
+    <value>随机（安全）</value>
+  </data>
+  <data name="SettingsDefaultSheet" xml:space="preserve">
+    <value>默认工作表名称</value>
+  </data>
+  <data name="SettingsDocumentIdSeed" xml:space="preserve">
+    <value>DocumentIdSeed</value>
+  </data>
+  <data name="SettingsBaseIri" xml:space="preserve">
+    <value>Base IRI</value>
+  </data>
+  <data name="SettingsIncludeAllDocs" xml:space="preserve">
+    <value>包含所有文档</value>
+  </data>
+  <data name="SettingsIncludeKoreanDesc" xml:space="preserve">
+    <value>包含韩文说明</value>
+  </data>
+  <data name="SettingsRememberFolders" xml:space="preserve">
+    <value>记住最后的输入/输出文件夹</value>
+  </data>
+  <data name="SettingsAfterOpenFolder" xml:space="preserve">
+    <value>转换后打开输出文件夹</value>
+  </data>
+  <data name="SettingsAfterOpenFile" xml:space="preserve">
+    <value>转换后打开输出文件</value>
+  </data>
+  <data name="SettingsWarningsOnly" xml:space="preserve">
+    <value>仅在有警告时写入 warnings.txt</value>
+  </data>
+  <data name="SettingsOk" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="SettingsCancel" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="LanguageKorean" xml:space="preserve">
+    <value>韩语</value>
+  </data>
+  <data name="LanguageEnglish" xml:space="preserve">
+    <value>英语</value>
+  </data>
+  <data name="LanguageChinese" xml:space="preserve">
+    <value>简体中文</value>
+  </data>
+  <data name="IdSchemeExampleIri" xml:space="preserve">
+    <value>Example IRI</value>
+  </data>
+  <data name="IdSchemeUuidUrn" xml:space="preserve">
+    <value>UUID URN</value>
+  </data>
+  <data name="MessageInvalidDocumentIdSeed" xml:space="preserve">
+    <value>DocumentIdSeed 无效。</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="AboutVersionLabel" xml:space="preserve">
+    <value>版本</value>
+  </data>
+  <data name="AboutRepoLabel" xml:space="preserve">
+    <value>仓库</value>
+  </data>
+  <data name="AboutCopyright" xml:space="preserve">
+    <value>© AasExcelToXml</value>
+  </data>
+</root>

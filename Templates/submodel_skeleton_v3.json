@@ -1,0 +1,62 @@
+{
+  "submodels": {
+    "Assembly_information": {
+      "kind": "Instance",
+      "semanticId": {
+        "type": "ExternalReference",
+        "keys": [
+          {
+            "type": "Submodel",
+            "value": "http://smart.festo.com/AAS/Submodel/ElectricAndFluidPlan/1/0"
+          }
+        ]
+      },
+      "collections": {
+        "PlanFiles": {
+          "category": "PARAMETER",
+          "includeDescription": false,
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "value": "http://smart.festo.com/AAS/ConceptDescriptions/ElectricAndFluidPlan/PlanFiles/1/0"
+              }
+            ]
+          },
+          "placeholders": [
+            {
+              "kind": "file",
+              "idShort": "PlanFile01",
+              "category": "PARAMETER",
+              "semanticId": {
+                "type": "ExternalReference",
+                "keys": [
+                  {
+                    "type": "GlobalReference",
+                    "value": "http://smart.festo.com/AAS/ConceptDescriptions/ElectricAndFluidPlan/PlanFile/1/0"
+                  }
+                ]
+              },
+              "value": "",
+              "contentType": ""
+            }
+          ]
+        },
+        "PlanEntities": {
+          "category": "CONSTANT",
+          "includeDescription": false,
+          "semanticId": {
+            "type": "ExternalReference",
+            "keys": [
+              {
+                "type": "GlobalReference",
+                "value": "http://smart.festo.com/AAS/ConceptDescriptions/ElectricAndFluidPlan/PlanEntities/1/0"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "reference": {
+    "semanticIdWrapsReference": false,
+    "referenceElementValueWrapsReference": false,
+    "submodelReferenceWrapsReference": true,
+    "referenceTypeMode": "Element",
+    "key": {
+      "mode": "Element",
+      "attributeNames": [],
+      "childElementNames": [
+        "type",
+        "value"
+      ]
+    },
+    "referenceChildOrder": [
+      "type",
+      "keys"
+    ]
+  },
+  "elementOrders": {},
+  "description": {
+    "mode": "LangStringTextType",
+    "attributeNames": [],
+    "subElementNames": [
+      "language",
+      "text"
+    ]
+  },
+  "multiLanguageValue": {
+    "mode": "LangStringTextType",
+    "attributeNames": [],
+    "subElementNames": [
+      "language",
+      "text"
+    ]
+  },
+  "submodelElementWrapper": false,
+  "referenceElementKeyTypes": [
+    "Submodel",
+    "Property"
+  ]
+}
