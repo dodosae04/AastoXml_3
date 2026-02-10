@@ -16,7 +16,11 @@ public record AasEnvironmentSpec(List<AasSpec> Assets);
 
 public record AasSpec(string Name, string IdShort, List<SubmodelSpec> Submodels);
 
-public record SubmodelSpec(string Name, string IdShort, List<ElementSpec> Elements);
+public record SubmodelSpec(
+    string Name,
+    string IdShort,
+    List<ElementSpec> Elements,
+    string? Category = null);
 
 public record ElementSpec(
     string Collection,

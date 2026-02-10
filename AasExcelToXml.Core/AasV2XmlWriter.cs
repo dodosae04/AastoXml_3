@@ -109,7 +109,7 @@ public sealed class AasV2XmlWriter
                     : BuildSubmodelElements(aas.IdShort, submodel.IdShort, submodel.Elements, referenceIndex);
                 var submodelElement = new XElement(_aasNs + "submodel",
                     new XElement(_aasNs + "idShort", submodel.IdShort),
-                    CreateCategoryElement(null),
+                    CreateCategoryElement(submodel.Category),
                     CreateDescription(submodel.Name),
                     CreateIdentification(submodelId),
                     new XElement(_aasNs + "kind", "Instance"),
@@ -187,9 +187,11 @@ public sealed class AasV2XmlWriter
         HashSet<string> elementIdShorts,
         ReferenceIndex referenceIndex)
     {
+        var collectionCategory = elements.Select(e => e.Category).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
+
         return new XElement(_aasNs + "submodelElementCollection",
             new XElement(_aasNs + "idShort", collectionIdShort),
-            CreateCategoryElement(null),
+            CreateCategoryElement(collectionCategory),
             new XElement(_aasNs + "kind", "Instance"),
             new XElement(_aasNs + "ordered", "false"),
             new XElement(_aasNs + "allowDuplicates", "false"),

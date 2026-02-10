@@ -94,7 +94,7 @@ public sealed class AasV3XmlWriter
                 var submodelChildren = new List<Aas3ChildElement>
                 {
                     new("idShort", new XElement(_aasNs + "idShort", submodel.IdShort)),
-                    new("category", CreateCategoryElement(skeleton?.Category)),
+                    new("category", CreateCategoryElement(ResolveSubmodelCategory(submodel, skeleton))),
                     new("id", CreateIdElement(submodelId)),
                     new("description", CreateDescription(submodel.Name)),
                     new("kind", kindElement),
@@ -183,7 +183,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", collectionIdShort)),
-            new("category", CreateCategoryElement(skeleton?.Category)),
+            new("category", CreateCategoryElement(ResolveCollectionCategory(elements, skeleton))),
             new("description", descriptionElement),
             new("semanticId", CreateSemanticId(skeleton?.SemanticId)),
             new("qualifiers", null),
@@ -207,6 +207,23 @@ public sealed class AasV3XmlWriter
         return _profile.Reference.SemanticIdWrapsReference
             ? new XElement(_aasNs + "semanticId", BuildReference(referenceSpec))
             : new XElement(_aasNs + "semanticId", BuildReferenceContent(referenceSpec));
+    }
+
+    private static string? ResolveSubmodelCategory(SubmodelSpec submodel, SubmodelSkeleton? skeleton)
+    {
+        return !string.IsNullOrWhiteSpace(submodel.Category)
+            ? submodel.Category
+            : skeleton?.Category;
+    }
+
+    private static string? ResolveCollectionCategory(IEnumerable<ElementSpec> elements, SubmodelSkeletonCollection? skeleton)
+    {
+        if (!string.IsNullOrWhiteSpace(skeleton?.Category))
+        {
+            return skeleton.Category;
+        }
+
+        return elements.Select(e => e.Category).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
     }
 
     private XElement BuildPlaceholderElement(SubmodelSkeletonPlaceholder placeholder)
