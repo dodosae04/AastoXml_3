@@ -8,7 +8,8 @@ public sealed class SettingsXmlLoader
 
     public ColumnAliasSettings LoadOrCreate()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, FileName);
+        var baseDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AasExcelToXml");
+        var path = Path.Combine(baseDirectory, FileName);
         if (!File.Exists(path))
         {
             CreateDefault(path);

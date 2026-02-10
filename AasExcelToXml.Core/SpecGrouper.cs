@@ -4,14 +4,6 @@ namespace AasExcelToXml.Core;
 
 public static class SpecGrouper
 {
-    private static readonly Dictionary<string, string> AssetAliasMap = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Arm_list"] = "Robot_Arms",
-        ["Brake_list"] = "Arm_brakes",
-        ["Break_list"] = "Arm_brakes",
-        ["Cylinder_list"] = "Pneumatic_cylinders",
-        ["Switch_box_list"] = "Switch_boxs"
-    };
 
     public static AasEnvironmentSpec BuildEnvironmentSpec(List<SpecRow> rows, out SpecDiagnostics diagnostics)
     {
@@ -25,7 +17,7 @@ public static class SpecGrouper
         var normalized = new List<SpecRow>();
         foreach (var r in rows)
         {
-            var normalizedAas = string.IsNullOrWhiteSpace(r.Aas) ? string.Empty : NormalizeAssetName(r.Aas);
+            var normalizedAas = string.IsNullOrWhiteSpace(r.Aas) ? string.Empty : r.Aas.Trim();
             if (!string.IsNullOrWhiteSpace(normalizedAas) && !string.Equals(currentAas, normalizedAas, StringComparison.Ordinal))
             {
                 currentAas = normalizedAas;
@@ -344,7 +336,7 @@ public static class SpecGrouper
             return trimmed;
         }
 
-        return NormalizeIdShort(NormalizeAssetName(trimmed));
+        return NormalizeIdShort(trimmed);
     }
 
     private static string ResolveRelationshipIdShort(RelationshipSpec relationship, string fallback)
@@ -369,26 +361,9 @@ public static class SpecGrouper
             || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string NormalizeAssetName(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return raw;
-        }
-
-        var trimmed = raw.Trim();
-        if (AssetAliasMap.TryGetValue(trimmed, out var alias))
-        {
-            return alias;
-        }
-
-        var normalized = NormalizeIdShort(trimmed);
-        return AssetAliasMap.TryGetValue(normalized, out var normalizedAlias) ? normalizedAlias : trimmed;
-    }
-
     private static string NormalizeAssetIdShort(string raw)
     {
-        return NormalizeIdShort(NormalizeAssetName(raw));
+        return NormalizeIdShort(raw);
     }
 
     private static string NormalizeElementIdShort(SpecRow row, string raw)
@@ -464,17 +439,7 @@ public static class SpecGrouper
 
     private static string NormalizeSubmodelName(string name)
     {
-        var trimmed = name.Trim();
-        return trimmed switch
-        {
-            "General Information" => "General_information",
-            "Mechanical Information" => "Mechanical_information",
-            "Operational Information" => "Operational_information",
-            "Technical Information" => "Technical_Information",
-            "Assembly" => "Assembly_information",
-            "Documantation" => "Documentation",
-            _ => NormalizeIdShort(trimmed)
-        };
+        return NormalizeIdShort(name);
     }
 
     private sealed class AasBuilder
