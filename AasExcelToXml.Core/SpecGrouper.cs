@@ -2,9 +2,23 @@
 
 namespace AasExcelToXml.Core;
 
+// [역할] 엑셀 행(SpecRow) 목록을 AAS 변환용 중간 모델(AasEnvironmentSpec)로 그룹핑/정규화한다.
+// [입력] ExcelSpecReader에서 읽은 행 데이터(List<SpecRow>).
+// [출력] AAS/서브모델/엘리먼트 트리와 경고 정보를 담은 AasEnvironmentSpec + SpecDiagnostics.
+// [수정 포인트] Relationship idShort 규칙은 ParseElement + ResolveRelationshipIdShort에서 제어한다.
 public static class SpecGrouper
 {
 
+    /// <summary>
+    /// 엑셀 행을 AAS 구조로 묶고, 누락 참조/중복 idShort 같은 진단 정보를 함께 생성한다.
+    /// </summary>
+    /// <param name="rows">엑셀에서 읽어온 원시 행 목록.</param>
+    /// <param name="diagnostics">스킵/참조 누락/중복 관련 경고를 누적하는 진단 객체.</param>
+    /// <returns>XML Writer가 그대로 소비할 수 있는 환경 스펙.</returns>
+    /// <remarks>
+    /// 이 메서드 흐름을 수정하면 전체 출력 구조(AAS/서브모델/엘리먼트 배치)가 바뀐다.
+    /// 특히 Relationship 이름 규칙은 ParseElement에서 결정된 값이 최종 XML까지 전달된다.
+    /// </remarks>
     public static AasEnvironmentSpec BuildEnvironmentSpec(List<SpecRow> rows, out SpecDiagnostics diagnostics)
     {
         diagnostics = new SpecDiagnostics();
@@ -171,6 +185,17 @@ public static class SpecGrouper
         return new AasEnvironmentSpec(assets);
     }
 
+    /// <summary>
+    /// 한 행을 Property/Entity/Relationship/ReferenceElement 등 실제 요소 타입으로 판정한다.
+    /// </summary>
+    /// <param name="row">현재 엑셀 행.</param>
+    /// <param name="diagnostics">경고 기록 객체.</param>
+    /// <returns>분류/정규화가 적용된 단일 ElementSpec.</returns>
+    /// <remarks>
+    /// 수정 포인트:
+    /// - Relationship idShort는 반드시 엑셀 D열(Property_Eng) 기반 fallback(idShort)을 유지한다.
+    /// - PropType=Entity + [first]/[second] 패턴으로 Relationship로 승격되는 경우도 동일 규칙을 적용한다.
+    /// </remarks>
     private static ElementSpec ParseElement(SpecRow row, SpecDiagnostics diagnostics)
     {
         var displayName = string.IsNullOrWhiteSpace(row.PropKor) ? row.PropEng : row.PropKor;
@@ -340,19 +365,20 @@ public static class SpecGrouper
         return NormalizeIdShort(trimmed);
     }
 
+    /// <summary>
+    /// Relationship idShort를 결정한다.
+    /// </summary>
+    /// <param name="relationship">파싱된 first/second 관계 정보(검증/참조 보정 용도).</param>
+    /// <param name="fallback">엑셀 D열(Property_Eng)에서 생성한 기본 idShort.</param>
+    /// <returns>항상 fallback을 반환한다.</returns>
+    /// <remarks>
+    /// 요구사항상 Relationship 이름은 엑셀 값 "그대로"를 사용해야 하므로,
+    /// first/second 기반 합성(예: A_to_B)이나 접두사 변형은 절대 수행하지 않는다.
+    /// 이름 안전성은 이미 fallback 생성 시 NormalizeElementIdShort가 처리한다.
+    /// </remarks>
     private static string ResolveRelationshipIdShort(RelationshipSpec relationship, string fallback)
     {
-        var first = NormalizeReferenceValue(relationship.First);
-        var second = NormalizeReferenceValue(relationship.Second);
-        if (string.IsNullOrWhiteSpace(first)
-            || string.IsNullOrWhiteSpace(second)
-            || IsIri(first)
-            || IsIri(second))
-        {
-            return fallback;
-        }
-
-        return NormalizeIdShort($"{first}_to_{second}");
+        return fallback;
     }
 
     private static bool IsIri(string value)
