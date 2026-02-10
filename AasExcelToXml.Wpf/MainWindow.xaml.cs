@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private string? _lastOutputFolder;
     private string? _lastOutputFile;
     private bool _isConverting;
+    private readonly List<string> _sessionWarnings = new();
 
     public MainWindow()
     {
@@ -182,6 +183,7 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(outputFolder);
 
         _warningsCount = 0;
+        _sessionWarnings.Clear();
         UpdateWarningsDisplay();
         _lastWarningsPath = null;
         _lastOutputFolder = outputFolder;
@@ -223,7 +225,9 @@ public partial class MainWindow : Window
             if (sheets.Count > 0 && !sheets.Any(name => string.Equals(name, sheetName, StringComparison.OrdinalIgnoreCase)))
             {
                 file.Status = "Skipped";
-                AddLog($"경고: {file.FileName}에 '{sheetName}' 시트가 없어 스킵합니다.");
+                var warning = $"{file.FileName}: '{sheetName}' 시트가 없어 스킵";
+                _sessionWarnings.Add(warning);
+                AddLog($"경고: {warning}");
                 ProgressBar.Value = i + 1;
                 continue;
             }
@@ -243,6 +247,8 @@ public partial class MainWindow : Window
             catch (Exception ex)
             {
                 file.Status = "Skipped";
+                var warning = $"{file.FileName}: {ex.Message}";
+                _sessionWarnings.Add(warning);
                 AddLog($"경고: {file.FileName} 스킵 - {ex.Message}");
             }
 
@@ -253,6 +259,9 @@ public partial class MainWindow : Window
         _isConverting = false;
         SetUiEnabled(true);
 
+        WriteSessionWarnings(outputFolder);
+
+
         if (_settings.OpenOutputFolderAfterConversion)
         {
             OpenPath(_lastOutputFolder);
@@ -262,6 +271,28 @@ public partial class MainWindow : Window
         {
             OpenPath(_lastOutputFile);
         }
+    }
+
+
+    private void WriteSessionWarnings(string outputFolder)
+    {
+        if (_sessionWarnings.Count == 0)
+        {
+            return;
+        }
+
+        var path = Path.Combine(outputFolder, "warnings.txt");
+        var lines = new List<string>();
+        if (File.Exists(path))
+        {
+            lines.AddRange(File.ReadAllLines(path));
+        }
+
+        lines.AddRange(_sessionWarnings.Select(w => $"[WPF] {w}"));
+        File.WriteAllLines(path, lines);
+        _lastWarningsPath = path;
+        _warningsCount += _sessionWarnings.Count;
+        UpdateWarningsDisplay();
     }
 
     private ConvertOptions BuildOptions(string inputPath, AasVersion version)

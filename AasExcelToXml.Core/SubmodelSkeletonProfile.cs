@@ -15,6 +15,7 @@ internal sealed class SubmodelSkeletonProfile
 internal sealed class SubmodelSkeleton
 {
     public string? Kind { get; set; }
+    public string? Category { get; set; }
     public SubmodelSkeletonReference? SemanticId { get; set; }
     public Dictionary<string, SubmodelSkeletonCollection> Collections { get; set; } = new(StringComparer.Ordinal);
 }

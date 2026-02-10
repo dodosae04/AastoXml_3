@@ -163,7 +163,8 @@ public static class SpecGrouper
                     new SubmodelSpec(
                         Name: sm.DisplayName,
                         IdShort: NormalizeIdShort(sm.Name),
-                        Elements: sm.Elements
+                        Elements: sm.Elements,
+                        Category: sm.Elements.Select(e => e.Category).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c))
                     )).ToList()
             )).ToList();
 
