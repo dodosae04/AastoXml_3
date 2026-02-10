@@ -12,6 +12,10 @@ using AasExcelToXml.Wpf.ViewModels;
 
 namespace AasExcelToXml.Wpf;
 
+// [역할] 사용자가 입력 파일/시트/옵션을 선택해 변환을 실행하는 WPF 메인 화면의 이벤트를 처리한다.
+// [입력] UI 컨트롤 값(파일 목록, 시트명, 출력 폴더, 옵션 체크 상태).
+// [출력] XML 파일 생성 요청, 로그/경고 표시, 사용자 설정 저장.
+// [수정 포인트] Core 옵션 연결(예: 카테고리 상수, 시트 선택, warnings 경로)은 ConvertButton_Click 계열에서 조정한다.
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<InputFileItem> _files = new();
@@ -35,6 +39,12 @@ public partial class MainWindow : Window
         LoadSettings();
     }
 
+    /// <summary>
+    /// 저장된 사용자 설정을 로드하고 언어/출력 경로를 초기화한다.
+    /// </summary>
+    /// <remarks>
+    /// 설정 저장소 위치나 키 구조를 바꾸면 SettingsService와 함께 수정해야 한다.
+    /// </remarks>
     private void LoadSettings()
     {
         _settings = SettingsService.Load();

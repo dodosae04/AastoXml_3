@@ -4,6 +4,10 @@ using AasExcelToXml.Core.IdGeneration;
 
 namespace AasExcelToXml.Core;
 
+// [역할] AasEnvironmentSpec를 AAS 3.0 XML 문서로 직렬화한다.
+// [입력] 그룹핑 완료된 스펙, 변환 옵션, 진단 객체, 문서 ID 생성기.
+// [출력] AAS 3.0 스키마 구조를 따르는 XDocument.
+// [수정 포인트] Relationship/Entity/Collection 출력 구조를 바꾸려면 BuildElement 계열을 수정한다.
 public sealed class AasV3XmlWriter
 {
     private const string DefaultAasNamespace = "https://admin-shell.io/aas/3/0";
@@ -31,6 +35,15 @@ public sealed class AasV3XmlWriter
         _submodelSkeletonProfile = SubmodelSkeletonLoader.Load(diagnostics);
     }
 
+    /// <summary>
+    /// 중간 스펙을 AAS 3.0 환경 XML로 변환한다.
+    /// </summary>
+    /// <param name="spec">SpecGrouper 결과 스펙.</param>
+    /// <returns>저장 가능한 AAS 3.0 XML 문서.</returns>
+    /// <remarks>
+    /// Relationship의 idShort는 SpecGrouper에서 확정된 값을 그대로 사용한다.
+    /// 따라서 이름 합성 규칙을 바꾸려면 Writer가 아니라 SpecGrouper를 수정해야 한다.
+    /// </remarks>
     public XDocument Write(AasEnvironmentSpec spec)
     {
         var root = new XElement(_aasNs + "environment",

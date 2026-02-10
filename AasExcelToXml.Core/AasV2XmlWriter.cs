@@ -4,6 +4,10 @@ using AasExcelToXml.Core.IdGeneration;
 
 namespace AasExcelToXml.Core;
 
+// [역할] AasEnvironmentSpec를 AAS 2.0 XML 문서로 직렬화한다.
+// [입력] 스펙 모델, 옵션, 진단 객체, 문서 ID 생성기.
+// [출력] AAS 2.0 네임스페이스 형식의 XDocument.
+// [수정 포인트] relationshipElement, entity, reference 출력 태그 구조를 바꾸려면 BuildSubmodelElements/BuildElement 계열을 수정한다.
 public sealed class AasV2XmlWriter
 {
     // 샘플이 V2 네임스페이스를 쓰는 경우가 많아서 기본 ns를 잡아둠
@@ -26,6 +30,15 @@ public sealed class AasV2XmlWriter
         _documentIdGenerator = documentIdGenerator;
     }
 
+    /// <summary>
+    /// 중간 스펙을 AAS 2.0 XML로 직렬화한다.
+    /// </summary>
+    /// <param name="spec">SpecGrouper에서 생성된 환경 스펙.</param>
+    /// <returns>AAS 2.0 표준 구조를 갖는 XML 문서.</returns>
+    /// <remarks>
+    /// Relationship idShort 값은 SpecGrouper에서 전달된 값을 그대로 사용한다.
+    /// 즉, 이름 정책 변경은 Writer가 아닌 SpecGrouper에서 수정해야 회귀를 막을 수 있다.
+    /// </remarks>
     public XDocument Write(AasEnvironmentSpec spec)
     {
         var root = new XElement(_aasNs + "aasenv",
