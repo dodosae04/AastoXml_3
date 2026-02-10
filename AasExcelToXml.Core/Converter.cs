@@ -2,7 +2,6 @@
 
 public static class Converter
 {
-    // 변환 로직을 Core에 집중시키기 위해 입력/출력만 받아 처리한다.
     public static ConvertResult Convert(string inputPath, string outputPath, string? sheetName = null, ConvertOptions? options = null)
     {
         options ??= new ConvertOptions();
@@ -10,8 +9,11 @@ public static class Converter
         {
             options.InputFileName = Path.GetFileNameWithoutExtension(inputPath);
         }
+
         var rows = ExcelSpecReader.ReadRows(inputPath, sheetName);
         var spec = SpecGrouper.BuildEnvironmentSpec(rows, out var diagnostics);
+        spec = ApplyCategorySettings(spec, options);
+
         var documentIdGenerator = new DocumentIdGenerator(options.DocumentIdSeed);
         var doc = AasXmlWriterFactory.Write(spec, options, diagnostics, documentIdGenerator);
 
@@ -35,7 +37,38 @@ public static class Converter
         {
             File.Delete(warningsPath);
         }
+
         return new ConvertResult(outputPath, warningsPath, diagnostics);
+    }
+
+    private static AasEnvironmentSpec ApplyCategorySettings(AasEnvironmentSpec spec, ConvertOptions options)
+    {
+        if (!options.FillMissingCategoryWithConstant)
+        {
+            return spec;
+        }
+
+        var constant = options.MissingCategoryConstant?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(constant))
+        {
+            return spec;
+        }
+
+        var assets = spec.Assets
+            .Select(asset => asset with
+            {
+                Submodels = asset.Submodels
+                    .Select(submodel => submodel with
+                    {
+                        Elements = submodel.Elements
+                            .Select(element => string.IsNullOrWhiteSpace(element.Category) ? element with { Category = constant } : element)
+                            .ToList()
+                    })
+                    .ToList()
+            })
+            .ToList();
+
+        return new AasEnvironmentSpec(assets);
     }
 }
 

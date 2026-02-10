@@ -183,13 +183,6 @@ public static class SpecGrouper
         var displayName = string.IsNullOrWhiteSpace(row.PropKor) ? row.PropEng : row.PropKor;
         var baseName = string.IsNullOrWhiteSpace(row.PropEng) ? row.PropKor : row.PropEng;
         var idShortBase = baseName;
-        if (string.Equals(row.PropType, "Entity", StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrWhiteSpace(row.PropEng)
-            && row.PropEng.StartsWith("Ent_", StringComparison.OrdinalIgnoreCase))
-        {
-            idShortBase = row.PropEng["Ent_".Length..];
-        }
-
         var idShort = NormalizeElementIdShort(row, idShortBase);
         if (IsDocumentationInputRow(row.Submodel, baseName))
         {
@@ -202,7 +195,8 @@ public static class SpecGrouper
                 Value: row.Value,
                 Uom: row.Uom,
                 ReferenceTarget: null,
-                Relationship: null
+                Relationship: null,
+                Category: row.Category
             );
         }
 
@@ -223,7 +217,8 @@ public static class SpecGrouper
                 ReferenceTarget: null,
                 Relationship: null,
                 ReferenceTargetAasIdShort: NormalizeAssetIdShort(target),
-                ReferenceTargetSubmodelHint: NormalizeIdShort(row.Submodel)
+                ReferenceTargetSubmodelHint: NormalizeIdShort(row.Submodel),
+                Category: row.Category
             );
         }
 
@@ -243,7 +238,8 @@ public static class SpecGrouper
                     Value: row.Value,
                     Uom: row.Uom,
                     ReferenceTarget: null,
-                    Relationship: relationship
+                    Relationship: relationship,
+                    Category: row.Category
                 );
             }
 
@@ -257,7 +253,8 @@ public static class SpecGrouper
                 Value: row.Value,
                 Uom: row.Uom,
                 ReferenceTarget: NormalizeReferenceValue(entityTarget),
-                Relationship: null
+                Relationship: null,
+                Category: row.Category
             );
         }
 
@@ -277,7 +274,8 @@ public static class SpecGrouper
                 Value: row.Value,
                 Uom: row.Uom,
                 ReferenceTarget: null,
-                Relationship: relationship
+                Relationship: relationship,
+                Category: row.Category
             );
         }
 
@@ -291,7 +289,8 @@ public static class SpecGrouper
             Value: row.Value,
             Uom: row.Uom,
             ReferenceTarget: null,
-            Relationship: null
+            Relationship: null,
+            Category: row.Category
         );
     }
 
@@ -345,8 +344,7 @@ public static class SpecGrouper
             return trimmed;
         }
 
-        var stripped = StripEntityPrefix(trimmed);
-        return NormalizeIdShort(NormalizeAssetName(stripped));
+        return NormalizeIdShort(NormalizeAssetName(trimmed));
     }
 
     private static string ResolveRelationshipIdShort(RelationshipSpec relationship, string fallback)
@@ -362,16 +360,6 @@ public static class SpecGrouper
         }
 
         return NormalizeIdShort($"{first}_to_{second}");
-    }
-
-    private static string StripEntityPrefix(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return value;
-        }
-
-        return Regex.Replace(value, @"^Ent([_\-\s]+)?", string.Empty, RegexOptions.IgnoreCase).Trim();
     }
 
     private static bool IsIri(string value)
@@ -471,9 +459,7 @@ public static class SpecGrouper
             return string.Empty;
         }
 
-        var normalized = NormalizeIdShort(raw);
-        // 컬렉션명이 비어 있거나 의미 없는 값이면 SMC를 생성하지 않도록 비워 둔다.
-        return string.Equals(normalized, "Unnamed", StringComparison.Ordinal) ? string.Empty : normalized;
+        return raw.Trim();
     }
 
     private static string NormalizeSubmodelName(string name)

@@ -45,4 +45,6 @@ public sealed class ConvertOptions
     public string DocumentDefaultClassName { get; init; } = "Technical specifiction";
     public string DocumentDefaultClassificationSystem { get; init; } = "VDI2770:2018";
     public bool WriteWarningsOnlyWhenNeeded { get; init; }
+    public bool FillMissingCategoryWithConstant { get; init; }
+    public string MissingCategoryConstant { get; init; } = string.Empty;
 }
