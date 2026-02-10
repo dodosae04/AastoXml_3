@@ -33,7 +33,6 @@ public sealed class DocumentationSkeletonBuilderV3
     public IEnumerable<XElement> Build(SubmodelSpec submodel, string aasIdShort)
     {
         // AAS3 Documentation은 정답 스켈레톤 프로파일 구조를 그대로 유지하고, 엑셀 값만 치환한다.
-        var isAirbalanceAas = DocumentationIdShortMapper.IsAirbalanceAas(aasIdShort);
         var documentInputs = ExtractDocumentInputs(submodel.Elements);
         if (documentInputs.Count == 0)
         {
@@ -47,26 +46,20 @@ public sealed class DocumentationSkeletonBuilderV3
             documentInputs = new List<DocumentInput> { primaryInput };
         }
 
-        var orderedInputs = documentInputs
-            .Select((input, index) => new
-            {
-                Input = input,
-                IdShort = DocumentationIdShortMapper.ResolveDocumentCollectionIdShort(
-                    input.CollectionIdShort,
-                    index + 1,
-                    aasIdShort,
-                    _profile.DocumentCollectionIdShortPattern)
-            })
-            
-            .ThenBy(item => item.Input.Index)
-            .ToList();
-
         var list = new List<XElement>();
-        foreach (var item in orderedInputs)
+        foreach (var input in documentInputs)
         {
-            var element = isAirbalanceAas
-                ? BuildAirbalanceDocumentCollection(item.IdShort, item.Input, overrides, primaryInput)
-                : BuildDocumentSpecCollection(item.IdShort, item.Input, overrides, primaryInput);
+            var idShort = DocumentationIdShortMapper.ResolveDocumentCollectionIdShort(
+                input.CollectionIdShort,
+                input.Index,
+                aasIdShort,
+                _profile.DocumentCollectionIdShortPattern);
+            if (string.IsNullOrWhiteSpace(idShort))
+            {
+                continue;
+            }
+
+            var element = BuildDocumentSpecCollection(idShort, input, overrides, primaryInput);
             list.Add(element);
         }
 
@@ -354,8 +347,8 @@ public sealed class DocumentationSkeletonBuilderV3
     {
         var groups = elements
             .Where(IsDocumentationInputElement)
-            .Where(e => !string.IsNullOrWhiteSpace(e.Collection)).GroupBy(e => e.Collection)
-            .OrderBy(g => g.Key, StringComparer.Ordinal);
+            .Where(e => !string.IsNullOrWhiteSpace(e.Collection))
+            .GroupBy(e => e.Collection);
 
         var result = new List<DocumentInput>();
         var index = 1;
@@ -409,7 +402,7 @@ public sealed class DocumentationSkeletonBuilderV3
             }
         }
 
-        return inputs.OrderBy(input => input.Index).First();
+        return inputs.MinBy(input => input.Index)!;
     }
 
     private static string NormalizeMatchKey(string value)
@@ -455,73 +448,6 @@ public sealed class DocumentationSkeletonBuilderV3
             || key.Contains("role")
             || key.Contains("organizationname")
             || key.Contains("organizationofficialname");
-    }
-
-    private XElement BuildAirbalanceDocumentCollection(string idShort, DocumentInput input, DocumentationOverrideProfile? overrides, DocumentInput primaryInput)
-    {
-        var overrideRule = overrides?.Resolve(input);
-        var documentId = _documentIdGenerator.NextId();
-        var isPrimary = ResolveIsPrimaryValue(input, overrides, primaryInput);
-
-        var classId = overrideRule?.DocumentClassId ?? ResolveFieldValue(input, "classid", "documentclassid");
-        var className = overrideRule?.DocumentClassName ?? ResolveFieldValue(input, "classname", "documentclassname", "documentclass");
-        var classificationSystem = overrideRule?.DocumentClassificationSystem ?? ResolveFieldValue(input, "classificationsystem", "documentclassificationsystem");
-        var language = overrideRule?.Language ?? ResolveFieldValue(input, "language");
-        var documentVersionId = overrideRule?.DocumentVersionId ?? ResolveFieldValue(input, "documentversionid");
-        var title = ResolveFieldValue(input, "title", "documenttitle", "documentname") ?? input.Name;
-        var summary = ResolveFieldValue(input, "summary");
-        var keyWords = ResolveFieldValue(input, "keywords", "keyword");
-        var setDate = ResolveFieldValue(input, "setdate");
-        var statusValue = ResolveFieldValue(input, "statusvalue");
-        var role = ResolveFieldValue(input, "role");
-        var organizationName = ResolveFieldValue(input, "organizationname");
-        var organizationOfficialName = ResolveFieldValue(input, "organizationofficialname");
-
-        classId ??= _options.DocumentDefaultClassId;
-        className ??= _options.DocumentDefaultClassName;
-        classificationSystem ??= _options.DocumentDefaultClassificationSystem;
-        language ??= _options.DocumentDefaultLanguage;
-        documentVersionId ??= _options.DocumentDefaultVersionId;
-        title ??= _options.InputFileName;
-        if (string.IsNullOrWhiteSpace(setDate) && _options.UseFixedSetDate && !string.IsNullOrWhiteSpace(_options.DocumentDefaultSetDate))
-        {
-            setDate = _options.DocumentDefaultSetDate;
-        }
-        statusValue ??= _options.DocumentDefaultStatusValue;
-        role ??= _options.DocumentDefaultRole;
-        organizationName ??= _options.DocumentDefaultOrganizationName;
-        organizationOfficialName ??= _options.DocumentDefaultOrganizationOfficialName;
-
-        var versionChildren = new List<XElement>
-        {
-            BuildVdiProperty("Language01", language, "xs:string", DocumentationSemanticUris.DocumentVersionLanguage),
-            BuildVdiProperty("DocumentVersionId", documentVersionId, "xs:string", DocumentationSemanticUris.DocumentVersionId),
-            BuildVdiMultiLanguageProperty("Title", title, DocumentationSemanticUris.Title, "EN"),
-            BuildVdiMultiLanguageProperty("Summary", summary, DocumentationSemanticUris.Summary, "kr"),
-            BuildVdiMultiLanguageProperty("KeyWords", keyWords, DocumentationSemanticUris.KeyWords, "kr"),
-            BuildVdiProperty("SetDate", setDate, "xs:string", DocumentationSemanticUris.SetDate),
-            BuildVdiProperty("StatusValue", statusValue, "xs:string", DocumentationSemanticUris.StatusValue),
-            BuildVdiProperty("Role", role, "xs:string", DocumentationSemanticUris.Role),
-            BuildVdiProperty("OrganizationName", organizationName, "xs:string", DocumentationSemanticUris.OrganizationName),
-            BuildVdiProperty("OrganizationOfficialName", organizationOfficialName, "xs:string", DocumentationSemanticUris.OrganizationOfficialName),
-            BuildVdiFile("DigitalFile", input)
-        };
-
-        var children = new List<Aas3ChildElement>
-        {
-            new("idShort", new XElement(_aasNs + "idShort", idShort)),
-            new("category", new XElement(_aasNs + "category", "CONSTANT")),
-            new("semanticId", CreateVdi2770SemanticId(DocumentationSemanticUris.Document)),
-            new("value", new XElement(_aasNs + "value",
-                BuildVdiProperty("DocumentId", documentId, "xs:string", DocumentationSemanticUris.DocumentId),
-                BuildVdiProperty("IsPrimaryDocumentId", isPrimary, "xs:boolean", DocumentationSemanticUris.IsPrimaryDocumentId),
-                BuildVdiProperty("DocumentClassId", classId, "xs:string", DocumentationSemanticUris.DocumentClassId),
-                BuildVdiProperty("DocumentClassName", className, "xs:string", DocumentationSemanticUris.DocumentClassName),
-                BuildVdiProperty("DocumentClassificationSystem", classificationSystem, "xs:string", DocumentationSemanticUris.DocumentClassificationSystem),
-                BuildVdiDocumentVersionCollection("DocumentVersion01", versionChildren)))
-        };
-
-        return _orderer.BuildElement("submodelElementCollection", children);
     }
 
     private XElement BuildDocumentSpecCollection(string idShort, DocumentInput input, DocumentationOverrideProfile? overrides, DocumentInput primaryInput)

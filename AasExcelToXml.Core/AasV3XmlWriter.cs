@@ -94,6 +94,7 @@ public sealed class AasV3XmlWriter
                 var submodelChildren = new List<Aas3ChildElement>
                 {
                     new("idShort", new XElement(_aasNs + "idShort", submodel.IdShort)),
+                    new("category", CreateCategoryElement(skeleton?.Category)),
                     new("id", CreateIdElement(submodelId)),
                     new("description", CreateDescription(submodel.Name)),
                     new("kind", kindElement),
@@ -182,7 +183,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", collectionIdShort)),
-            new("category", string.IsNullOrWhiteSpace(skeleton?.Category) ? null : new XElement(_aasNs + "category", skeleton!.Category)),
+            new("category", CreateCategoryElement(skeleton?.Category)),
             new("description", descriptionElement),
             new("semanticId", CreateSemanticId(skeleton?.SemanticId)),
             new("qualifiers", null),
@@ -389,9 +390,13 @@ public sealed class AasV3XmlWriter
 
     private XElement? CreateCategoryElement(string? category)
     {
-        return string.IsNullOrWhiteSpace(category)
+        var resolved = string.IsNullOrWhiteSpace(category)
+            ? (_options.FillMissingCategoryWithConstant ? _options.MissingCategoryConstant : null)
+            : category;
+
+        return string.IsNullOrWhiteSpace(resolved)
             ? null
-            : new XElement(_aasNs + "category", category);
+            : new XElement(_aasNs + "category", resolved);
     }
 
     private XElement CreateIdElement(string id)

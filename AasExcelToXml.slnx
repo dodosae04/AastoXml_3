@@ -1,5 +1,4 @@
 <Solution>
-  <Project Path="AasExcelToXml.Gui/AasExcelToXml.Gui.csproj" />
   <Project Path="AasExcelToXml.Wpf/AasExcelToXml.Wpf.csproj" />
   <Project Path="AasExcelToXml.Cli/AasExcelToXml.Cli.csproj" />
   <Project Path="AasExcelToXml.Core/AasExcelToXml.Core.csproj" />

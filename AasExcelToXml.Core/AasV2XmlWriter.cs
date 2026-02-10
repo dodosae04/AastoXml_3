@@ -109,7 +109,7 @@ public sealed class AasV2XmlWriter
                     : BuildSubmodelElements(aas.IdShort, submodel.IdShort, submodel.Elements, referenceIndex);
                 var submodelElement = new XElement(_aasNs + "submodel",
                     new XElement(_aasNs + "idShort", submodel.IdShort),
-                    new XElement(_aasNs + "category", "CONSTANT"),
+                    CreateCategoryElement(null),
                     CreateDescription(submodel.Name),
                     CreateIdentification(submodelId),
                     new XElement(_aasNs + "kind", "Instance"),
@@ -189,7 +189,7 @@ public sealed class AasV2XmlWriter
     {
         return new XElement(_aasNs + "submodelElementCollection",
             new XElement(_aasNs + "idShort", collectionIdShort),
-            new XElement(_aasNs + "category", "PARAMETER"),
+            CreateCategoryElement(null),
             new XElement(_aasNs + "kind", "Instance"),
             new XElement(_aasNs + "ordered", "false"),
             new XElement(_aasNs + "allowDuplicates", "false"),
@@ -322,7 +322,11 @@ public sealed class AasV2XmlWriter
 
     private XElement? CreateCategoryElement(string? category)
     {
-        return string.IsNullOrWhiteSpace(category) ? null : new XElement(_aasNs + "category", category);
+        var resolved = string.IsNullOrWhiteSpace(category)
+            ? (_options.FillMissingCategoryWithConstant ? _options.MissingCategoryConstant : null)
+            : category;
+
+        return string.IsNullOrWhiteSpace(resolved) ? null : new XElement(_aasNs + "category", resolved);
     }
 
     private XElement CreateDescription(string name)
