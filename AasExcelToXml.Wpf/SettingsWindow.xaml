@@ -82,6 +82,8 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220" />
@@ -117,6 +119,12 @@
 
                     <CheckBox Grid.Row="9" Grid.ColumnSpan="2" Margin="0,12,0,0" Content="{local:Loc Key=WriteWarningsOnlyWhenNeededLabel}"
                               IsChecked="{Binding WriteWarningsOnlyWhenNeeded}" />
+                    <CheckBox Grid.Row="10" Grid.ColumnSpan="2" Margin="0,12,0,0" Content="category 누락 시 상수값 채우기"
+                              IsChecked="{Binding FillMissingCategoryWithConstant}" />
+
+                    <TextBox Grid.Row="11" Grid.Column="1" Margin="0,8,0,0" Text="{Binding MissingCategoryConstant}"
+                             IsEnabled="{Binding FillMissingCategoryWithConstant}" />
+
                 </Grid>
             </TabItem>
         </TabControl>

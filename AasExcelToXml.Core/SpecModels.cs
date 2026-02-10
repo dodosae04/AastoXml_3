@@ -8,7 +8,8 @@ public record SpecRow(
     string PropEng,
     string PropType,
     string Value,
-    string Uom
+    string Uom,
+    string Category
 );
 
 public record AasEnvironmentSpec(List<AasSpec> Assets);
@@ -27,6 +28,7 @@ public record ElementSpec(
     string Uom,
     string? ReferenceTarget,
     RelationshipSpec? Relationship,
+    string? Category = null,
     string? ReferenceTargetAasIdShort = null,
     string? ReferenceTargetSubmodelHint = null,
     ResolvedReference? ResolvedReference = null

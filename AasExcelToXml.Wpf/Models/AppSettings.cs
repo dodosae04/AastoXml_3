@@ -23,6 +23,8 @@ public sealed class AppSettings
     public string DefaultOrganizationName { get; set; } = "Hanuri";
     public string DefaultOrganizationOfficialName { get; set; } = "Hanuri";
     public bool WriteWarningsOnlyWhenNeeded { get; set; } = true;
+    public bool FillMissingCategoryWithConstant { get; set; }
+    public string MissingCategoryConstant { get; set; } = "PARAMETER";
 
     public AppSettings Clone()
     {
@@ -46,7 +48,9 @@ public sealed class AppSettings
             DefaultRole = DefaultRole,
             DefaultOrganizationName = DefaultOrganizationName,
             DefaultOrganizationOfficialName = DefaultOrganizationOfficialName,
-            WriteWarningsOnlyWhenNeeded = WriteWarningsOnlyWhenNeeded
+            WriteWarningsOnlyWhenNeeded = WriteWarningsOnlyWhenNeeded,
+            FillMissingCategoryWithConstant = FillMissingCategoryWithConstant,
+            MissingCategoryConstant = MissingCategoryConstant
         };
     }
 }

@@ -268,7 +268,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", element.IdShort)),
-            new("category", new XElement(_aasNs + "category", "PARAMETER")),
+            new("category", CreateCategoryElement(element.Category)),
             new("description", CreateDescription(element.DisplayNameKo)),
             new("semanticId", null),
             new("qualifiers", null),
@@ -291,7 +291,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", element.IdShort)),
-            new("category", new XElement(_aasNs + "category", "PARAMETER")),
+            new("category", CreateCategoryElement(element.Category)),
             new("description", CreateDescription(element.DisplayNameKo)),
             new("semanticId", null),
             new("qualifiers", null),
@@ -342,7 +342,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", element.IdShort)),
-            new("category", new XElement(_aasNs + "category", "PARAMETER")),
+            new("category", CreateCategoryElement(element.Category)),
             new("description", CreateDescription(element.DisplayNameKo)),
             new("semanticId", null),
             new("qualifiers", null),
@@ -359,8 +359,8 @@ public sealed class AasV3XmlWriter
         var first = relationship?.First ?? string.Empty;
         var second = relationship?.Second ?? string.Empty;
 
-        var firstEntityIdShort = StripEntityPrefix(ResolveReferenceTarget(first, elementIdShorts));
-        var secondEntityIdShort = StripEntityPrefix(ResolveReferenceTarget(second, elementIdShorts));
+        var firstEntityIdShort = ResolveReferenceTarget(first, elementIdShorts);
+        var secondEntityIdShort = ResolveReferenceTarget(second, elementIdShorts);
         var firstReference = new Aas3ReferenceSpec("ModelReference", new List<Aas3ReferenceKey>
         {
             new("Submodel", submodelId, true, "IRI"),
@@ -375,7 +375,7 @@ public sealed class AasV3XmlWriter
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", element.IdShort)),
-            new("category", new XElement(_aasNs + "category", "PARAMETER")),
+            new("category", CreateCategoryElement(element.Category)),
             new("description", CreateDescription(element.DisplayNameKo)),
             new("semanticId", null),
             new("qualifiers", null),
@@ -384,6 +384,14 @@ public sealed class AasV3XmlWriter
         };
 
         return _orderer.BuildElement("relationshipElement", children);
+    }
+
+
+    private XElement? CreateCategoryElement(string? category)
+    {
+        return string.IsNullOrWhiteSpace(category)
+            ? null
+            : new XElement(_aasNs + "category", category);
     }
 
     private XElement CreateIdElement(string id)
@@ -549,17 +557,6 @@ public sealed class AasV3XmlWriter
         return elementIdShorts.Contains(value) ? value : value;
     }
 
-    private static string StripEntityPrefix(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return value;
-        }
-
-        return value.StartsWith("Ent_", StringComparison.OrdinalIgnoreCase)
-            ? value["Ent_".Length..]
-            : value;
-    }
 
 }
 
