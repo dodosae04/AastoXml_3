@@ -25,6 +25,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private string _defaultOrganizationName = "Hanuri";
     private string _defaultOrganizationOfficialName = "Hanuri";
     private bool _writeWarningsOnlyWhenNeeded = true;
+    private bool _fillMissingCategoryWithConstant;
+    private string _missingCategoryConstant = "PARAMETER";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -140,6 +142,18 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         set => SetField(ref _writeWarningsOnlyWhenNeeded, value);
     }
 
+    public bool FillMissingCategoryWithConstant
+    {
+        get => _fillMissingCategoryWithConstant;
+        set => SetField(ref _fillMissingCategoryWithConstant, value);
+    }
+
+    public string MissingCategoryConstant
+    {
+        get => _missingCategoryConstant;
+        set => SetField(ref _missingCategoryConstant, value);
+    }
+
     public static SettingsViewModel FromSettings(AppSettings settings)
     {
         return new SettingsViewModel
@@ -160,7 +174,9 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
             DefaultRole = settings.DefaultRole,
             DefaultOrganizationName = settings.DefaultOrganizationName,
             DefaultOrganizationOfficialName = settings.DefaultOrganizationOfficialName,
-            WriteWarningsOnlyWhenNeeded = settings.WriteWarningsOnlyWhenNeeded
+            WriteWarningsOnlyWhenNeeded = settings.WriteWarningsOnlyWhenNeeded,
+            FillMissingCategoryWithConstant = settings.FillMissingCategoryWithConstant,
+            MissingCategoryConstant = settings.MissingCategoryConstant
         };
     }
 
@@ -183,6 +199,8 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         settings.DefaultOrganizationName = DefaultOrganizationName;
         settings.DefaultOrganizationOfficialName = DefaultOrganizationOfficialName;
         settings.WriteWarningsOnlyWhenNeeded = WriteWarningsOnlyWhenNeeded;
+        settings.FillMissingCategoryWithConstant = FillMissingCategoryWithConstant;
+        settings.MissingCategoryConstant = MissingCategoryConstant;
     }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null)

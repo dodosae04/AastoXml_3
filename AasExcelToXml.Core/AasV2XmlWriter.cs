@@ -218,7 +218,7 @@ public sealed class AasV2XmlWriter
     {
         return new XElement(_aasNs + "property",
             new XElement(_aasNs + "idShort", element.IdShort),
-            new XElement(_aasNs + "category", "PARAMETER"),
+            CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
             CreateSemanticId(),
@@ -257,7 +257,7 @@ public sealed class AasV2XmlWriter
 
         return new XElement(_aasNs + "referenceElement",
             new XElement(_aasNs + "idShort", element.IdShort),
-            new XElement(_aasNs + "category", "PARAMETER"),
+            CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
             CreateSemanticId(),
@@ -275,7 +275,7 @@ public sealed class AasV2XmlWriter
     {
         return new XElement(_aasNs + "entity",
             new XElement(_aasNs + "idShort", element.IdShort),
-            new XElement(_aasNs + "category", "PARAMETER"),
+            CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
             CreateSemanticId(),
@@ -301,7 +301,7 @@ public sealed class AasV2XmlWriter
         var secondLocal = IsIdShortReference(second) || elementIdShorts.Contains(second);
         return new XElement(_aasNs + "relationshipElement",
             new XElement(_aasNs + "idShort", element.IdShort),
-            new XElement(_aasNs + "category", "PARAMETER"),
+            CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
             CreateSemanticId(),
@@ -317,6 +317,12 @@ public sealed class AasV2XmlWriter
                 )
             )
         );
+    }
+
+
+    private XElement? CreateCategoryElement(string? category)
+    {
+        return string.IsNullOrWhiteSpace(category) ? null : new XElement(_aasNs + "category", category);
     }
 
     private XElement CreateDescription(string name)

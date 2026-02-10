@@ -8,6 +8,17 @@ namespace AasExcelToXml.Core;
 
 public static class ExcelSpecReader
 {
+    public static List<string> GetWorksheetNames(string excelPath)
+    {
+        if (!File.Exists(excelPath) || !string.Equals(Path.GetExtension(excelPath), ".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            return new List<string>();
+        }
+
+        using var wb = OpenWorkbookWithRetry(excelPath);
+        return wb.Worksheets.Select(w => w.Name).ToList();
+    }
+
     public static List<SpecRow> ReadRows(string inputPath, string? sheetName = null)
     {
         if (!File.Exists(inputPath))
@@ -18,23 +29,23 @@ public static class ExcelSpecReader
         var extension = Path.GetExtension(inputPath).ToLowerInvariant();
         return extension switch
         {
-            ".xlsx" => ReadXlsxRows(inputPath, sheetName ?? "사양시트"),
+            ".xlsx" => ReadXlsxRows(inputPath, sheetName),
             ".csv" => ReadCsvRows(inputPath),
             _ => throw new InvalidOperationException($"지원하지 않는 입력 형식입니다: {extension}")
         };
     }
 
-    private static List<SpecRow> ReadXlsxRows(string xlsxPath, string sheetName)
+    private static List<SpecRow> ReadXlsxRows(string xlsxPath, string? sheetName)
     {
         using var wb = OpenWorkbookWithRetry(xlsxPath);
-        var ws = wb.Worksheets.FirstOrDefault(w => string.Equals(w.Name, sheetName, StringComparison.OrdinalIgnoreCase));
+        var selectedSheetName = string.IsNullOrWhiteSpace(sheetName) ? "사양시트" : sheetName.Trim();
+        var ws = wb.Worksheets.FirstOrDefault(w => string.Equals(w.Name, selectedSheetName, StringComparison.OrdinalIgnoreCase));
         if (ws is null)
         {
             var candidates = string.Join(", ", wb.Worksheets.Select(w => w.Name));
-            throw new InvalidOperationException($"'{sheetName}' 시트를 찾을 수 없습니다. 사용 가능한 시트: {candidates}");
+            throw new InvalidOperationException($"'{selectedSheetName}' 시트를 찾을 수 없습니다. 사용 가능한 시트: {candidates}");
         }
 
-        // 헤더 alias 규칙: 공백/언더스코어 제거 + 대소문자 무시로 비교하여 약간의 변형을 허용한다.
         var headerRow = ws.FirstRowUsed();
         if (headerRow is null)
         {
@@ -43,31 +54,28 @@ public static class ExcelSpecReader
 
         var headerMap = headerRow.CellsUsed()
             .Where(c => !string.IsNullOrWhiteSpace(c.GetString()))
-            .ToDictionary(
-                c => NormalizeHeaderKey(c.GetString()),
-                c => c.Address.ColumnNumber
-            );
+            .ToDictionary(c => ColumnResolver.NormalizeHeaderKey(c.GetString()), c => c.Address.ColumnNumber);
 
         var columns = ResolveColumns(headerMap);
 
         var list = new List<SpecRow>();
         foreach (var row in ws.RowsUsed().Skip(1))
         {
-            // 최소 필수 컬럼이 모두 비어 있으면 빈 행으로 간주하여 스킵
             if (IsEmptyRow(index => row.Cell(index).GetString(), columns.Required))
             {
                 continue;
             }
 
             list.Add(new SpecRow(
-                Aas: row.Cell(columns.Aas).GetString().Trim(),
+                Aas: row.Cell(columns.Asset).GetString().Trim(),
                 Submodel: row.Cell(columns.Submodel).GetString().Trim(),
-                Collection: row.Cell(columns.Collection).GetString().Trim(),
-                PropKor: row.Cell(columns.PropKor).GetString().Trim(),
-                PropEng: row.Cell(columns.PropEng).GetString().Trim(),
-                PropType: row.Cell(columns.PropType).GetString().Trim(),
+                Collection: row.Cell(columns.SubmodelCollection).GetString().Trim(),
+                PropKor: row.Cell(columns.PropertyKor).GetString().Trim(),
+                PropEng: row.Cell(columns.PropertyEng).GetString().Trim(),
+                PropType: row.Cell(columns.PropertyType).GetString().Trim(),
                 Value: row.Cell(columns.Value).GetString().Trim(),
-                Uom: columns.Uom.HasValue ? row.Cell(columns.Uom.Value).GetString().Trim() : string.Empty
+                Uom: columns.Uom.HasValue ? row.Cell(columns.Uom.Value).GetString().Trim() : string.Empty,
+                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty
             ));
         }
 
@@ -124,32 +132,31 @@ public static class ExcelSpecReader
         }
 
         var headers = csv.HeaderRecord ?? Array.Empty<string>();
-        // 헤더 alias 규칙: 공백/언더스코어 제거 + 대소문자 무시로 비교하여 약간의 변형을 허용한다.
         var headerMap = headers
             .Select((name, index) => new { name, index })
             .Where(item => !string.IsNullOrWhiteSpace(item.name))
-            .ToDictionary(item => NormalizeHeaderKey(item.name), item => item.index);
+            .ToDictionary(item => ColumnResolver.NormalizeHeaderKey(item.name), item => item.index);
 
         var columns = ResolveColumns(headerMap);
 
         var list = new List<SpecRow>();
         while (csv.Read())
         {
-            // 최소 필수 컬럼이 모두 비어 있으면 빈 행으로 간주하여 스킵
             if (IsEmptyRow(index => csv.GetField(index), columns.Required))
             {
                 continue;
             }
 
             list.Add(new SpecRow(
-                Aas: csv.GetField(columns.Aas)?.Trim() ?? string.Empty,
+                Aas: csv.GetField(columns.Asset)?.Trim() ?? string.Empty,
                 Submodel: csv.GetField(columns.Submodel)?.Trim() ?? string.Empty,
-                Collection: csv.GetField(columns.Collection)?.Trim() ?? string.Empty,
-                PropKor: csv.GetField(columns.PropKor)?.Trim() ?? string.Empty,
-                PropEng: csv.GetField(columns.PropEng)?.Trim() ?? string.Empty,
-                PropType: csv.GetField(columns.PropType)?.Trim() ?? string.Empty,
+                Collection: csv.GetField(columns.SubmodelCollection)?.Trim() ?? string.Empty,
+                PropKor: csv.GetField(columns.PropertyKor)?.Trim() ?? string.Empty,
+                PropEng: csv.GetField(columns.PropertyEng)?.Trim() ?? string.Empty,
+                PropType: csv.GetField(columns.PropertyType)?.Trim() ?? string.Empty,
                 Value: csv.GetField(columns.Value)?.Trim() ?? string.Empty,
-                Uom: columns.Uom.HasValue ? (csv.GetField(columns.Uom.Value)?.Trim() ?? string.Empty) : string.Empty
+                Uom: columns.Uom.HasValue ? (csv.GetField(columns.Uom.Value)?.Trim() ?? string.Empty) : string.Empty,
+                Category: columns.Category.HasValue ? (csv.GetField(columns.Category.Value)?.Trim() ?? string.Empty) : string.Empty
             ));
         }
 
@@ -158,44 +165,35 @@ public static class ExcelSpecReader
 
     private static ColumnIndices ResolveColumns(Dictionary<string, int> headerMap)
     {
-        int Col(IEnumerable<string> aliases)
+        var settings = new SettingsXmlLoader().LoadOrCreate();
+        var resolver = new ColumnResolver(settings);
+        var columns = resolver.Resolve(headerMap);
+
+        int Require(string key)
         {
-            foreach (var alias in aliases)
+            if (columns.TryGetValue(key, out var idx))
             {
-                var key = NormalizeHeaderKey(alias);
-                if (headerMap.TryGetValue(key, out var idx))
-                {
-                    return idx;
-                }
+                return idx;
             }
 
-            throw new InvalidOperationException($"필수 헤더를 찾을 수 없습니다. 후보: {string.Join(", ", aliases)}");
+            throw new InvalidOperationException($"필수 헤더를 찾을 수 없습니다: {key} (setting.xml 확인)");
         }
 
-        int? OptionalCol(IEnumerable<string> aliases)
+        int? Optional(string key)
         {
-            foreach (var alias in aliases)
-            {
-                var key = NormalizeHeaderKey(alias);
-                if (headerMap.TryGetValue(key, out var idx))
-                {
-                    return idx;
-                }
-            }
-
-            return null;
+            return columns.TryGetValue(key, out var idx) ? idx : null;
         }
 
-        var colAas = Col(new[] { "AAS", "Asset (AAS)", "Asset(AAS)", "Asset" });
-        var colSm = Col(new[] { "Submodel", "Sub Model", "Sub-Model" });
-        var colSmc = Col(new[] { "SubmodelCollection", "Submodel Collection", "Submodel_Collection", "Collection" });
-        var colKor = Col(new[] { "Property_Kor", "Property(Kor)", "Property Kor", "Property_KR", "Property_ko", "Property_KO", "PropertyKOR" });
-        var colEng = Col(new[] { "Property_Eng", "Property(Eng)", "Property Eng", "Property_EN", "Property_en", "PropertyENG" });
-        var colType = Col(new[] { "Property type", "Property Type", "PropertyType", "Type", "Data Type" });
-        var colVal = Col(new[] { "Value", "값", "Data" });
-        var colUom = OptionalCol(new[] { "UOM", "UoM", "Unit", "Unit of Measure" });
-
-        return new ColumnIndices(colAas, colSm, colSmc, colKor, colEng, colType, colVal, colUom);
+        return new ColumnIndices(
+            Asset: Require("Asset"),
+            Submodel: Require("Submodel"),
+            SubmodelCollection: Require("SubmodelCollection"),
+            PropertyKor: Require("PropertyKor"),
+            PropertyEng: Require("PropertyEng"),
+            PropertyType: Require("PropertyType"),
+            Value: Require("Value"),
+            Uom: Optional("UOM"),
+            Category: Optional("Category"));
     }
 
     private static bool IsEmptyRow(Func<int, string?> getValue, params int[] columns)
@@ -211,25 +209,17 @@ public static class ExcelSpecReader
         return true;
     }
 
-    private static string NormalizeHeaderKey(string header)
-    {
-        // 헤더 정규화: 공백/언더스코어 제거 + 소문자화로 alias 비교를 단순화한다.
-        return header.Trim()
-            .Replace(" ", string.Empty)
-            .Replace("_", string.Empty)
-            .ToLowerInvariant();
-    }
-
     private readonly record struct ColumnIndices(
-        int Aas,
+        int Asset,
         int Submodel,
-        int Collection,
-        int PropKor,
-        int PropEng,
-        int PropType,
+        int SubmodelCollection,
+        int PropertyKor,
+        int PropertyEng,
+        int PropertyType,
         int Value,
-        int? Uom)
+        int? Uom,
+        int? Category)
     {
-        public int[] Required => new[] { Aas, Submodel, Collection, PropKor, PropEng, PropType, Value };
+        public int[] Required => new[] { Asset, Submodel, SubmodelCollection, PropertyKor, PropertyEng, PropertyType, Value };
     }
 }

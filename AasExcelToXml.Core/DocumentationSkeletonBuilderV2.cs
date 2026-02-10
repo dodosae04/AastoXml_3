@@ -49,7 +49,7 @@ public sealed class DocumentationSkeletonBuilderV2
                     aasIdShort,
                     _profile.DocumentCollectionIdShortPattern)
             })
-            .OrderBy(item => string.Equals(item.IdShort, "Document01", StringComparison.Ordinal) ? 0 : 1)
+            
             .ThenBy(item => item.Input.Index)
             .ToList();
 
@@ -541,7 +541,7 @@ public sealed class DocumentationSkeletonBuilderV2
     {
         var groups = elements
             .Where(IsDocumentationInputElement)
-            .GroupBy(e => string.IsNullOrWhiteSpace(e.Collection) ? "Document01" : e.Collection)
+            .Where(e => !string.IsNullOrWhiteSpace(e.Collection)).GroupBy(e => e.Collection)
             .OrderBy(g => g.Key, StringComparer.Ordinal);
 
         var result = new List<DocumentInput>();

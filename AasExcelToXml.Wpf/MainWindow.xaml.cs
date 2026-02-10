@@ -16,6 +16,7 @@ public partial class MainWindow : Window
 {
     private readonly ObservableCollection<InputFileItem> _files = new();
     private readonly ObservableCollection<string> _logs = new();
+    private readonly ObservableCollection<string> _sheetNames = new();
     private AppSettings _settings = new();
     private CancellationTokenSource? _cts;
     private int _warningsCount;
@@ -29,6 +30,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         FilesListView.ItemsSource = _files;
         LogListBox.ItemsSource = _logs;
+        SheetNameComboBox.ItemsSource = _sheetNames;
         LoadSettings();
     }
 
@@ -36,19 +38,13 @@ public partial class MainWindow : Window
     {
         _settings = SettingsService.Load();
         LocalizationService.Instance.SetCulture(_settings.Language);
-        if (_settings.RememberLastFolders)
+        if (_settings.RememberLastFolders && !string.IsNullOrWhiteSpace(_settings.LastOutputFolder))
         {
-            if (!string.IsNullOrWhiteSpace(_settings.LastOutputFolder))
-            {
-                OutputFolderTextBox.Text = _settings.LastOutputFolder;
-            }
+            OutputFolderTextBox.Text = _settings.LastOutputFolder;
         }
     }
 
-    private void SaveSettings()
-    {
-        SettingsService.Save(_settings);
-    }
+    private void SaveSettings() => SettingsService.Save(_settings);
 
     private void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
@@ -58,30 +54,30 @@ public partial class MainWindow : Window
             Multiselect = true
         };
 
-        if (dialog.ShowDialog() != true)
+        if (dialog.ShowDialog() == true)
         {
-            return;
+            AddFiles(dialog.FileNames);
         }
-
-        AddFiles(dialog.FileNames);
     }
 
     private void AddFiles(IEnumerable<string> paths)
     {
         foreach (var path in paths)
         {
-            if (!File.Exists(path))
-            {
-                continue;
-            }
-
-            if (_files.Any(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)))
+            if (!File.Exists(path) || _files.Any(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)))
             {
                 continue;
             }
 
             _files.Add(new InputFileItem(path));
         }
+
+        if (FilesListView.SelectedItem is null && _files.Count > 0)
+        {
+            FilesListView.SelectedIndex = 0;
+        }
+
+        RefreshSheetNamesForSelection();
     }
 
     private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -91,11 +87,15 @@ public partial class MainWindow : Window
         {
             _files.Remove(item);
         }
+
+        RefreshSheetNamesForSelection();
     }
 
     private void ClearButton_Click(object sender, RoutedEventArgs e)
     {
         _files.Clear();
+        _sheetNames.Clear();
+        SheetNameComboBox.Text = string.Empty;
     }
 
     private void DropZone_DragOver(object sender, DragEventArgs e)
@@ -106,28 +106,50 @@ public partial class MainWindow : Window
 
     private void DropZone_Drop(object sender, DragEventArgs e)
     {
-        if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            AddFiles((string[])e.Data.GetData(DataFormats.FileDrop));
+        }
+    }
+
+    private void FilesListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        RefreshSheetNamesForSelection();
+    }
+
+    private void RefreshSheetNamesForSelection()
+    {
+        var selected = FilesListView.SelectedItem as InputFileItem;
+        if (selected is null)
         {
             return;
         }
 
-        var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-        AddFiles(files);
+        var names = ExcelSpecReader.GetWorksheetNames(selected.Path);
+        _sheetNames.Clear();
+        foreach (var name in names)
+        {
+            _sheetNames.Add(name);
+        }
+
+        if (_sheetNames.Count == 0)
+        {
+            return;
+        }
+
+        var preferred = _sheetNames.FirstOrDefault(name => string.Equals(name, "사양시트", StringComparison.OrdinalIgnoreCase))
+            ?? _sheetNames.First();
+        SheetNameComboBox.Text = preferred;
+        SheetNameComboBox.SelectedItem = preferred;
     }
 
     private void OutputBrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
+        var dialog = new OpenFolderDialog { Title = "Select output folder" };
+        if (dialog.ShowDialog() == true)
         {
-            Title = "Select output folder"
-        };
-
-        if (dialog.ShowDialog() != true)
-        {
-            return;
+            OutputFolderTextBox.Text = dialog.FolderName;
         }
-
-        OutputFolderTextBox.Text = dialog.FolderName;
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
@@ -140,6 +162,13 @@ public partial class MainWindow : Window
         if (_files.Count == 0)
         {
             AddLog("입력 파일이 없습니다.");
+            return;
+        }
+
+        var sheetName = SheetNameComboBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(sheetName))
+        {
+            AddLog("시트 이름을 선택하거나 입력하세요.");
             return;
         }
 
@@ -176,7 +205,6 @@ public partial class MainWindow : Window
         }
         SaveSettings();
 
-        var sheetName = string.IsNullOrWhiteSpace(SheetNameTextBox.Text) ? null : SheetNameTextBox.Text.Trim();
         var targetVersion = Aas3Radio.IsChecked == true ? AasVersion.Aas3_0 : AasVersion.Aas2_0;
 
         for (var i = 0; i < _files.Count; i++)
@@ -190,6 +218,15 @@ public partial class MainWindow : Window
             var file = _files[i];
             file.Status = "Processing";
             AddLog($"{file.FileName} 변환 시작...");
+
+            var sheets = ExcelSpecReader.GetWorksheetNames(file.Path);
+            if (sheets.Count > 0 && !sheets.Any(name => string.Equals(name, sheetName, StringComparison.OrdinalIgnoreCase)))
+            {
+                file.Status = "Skipped";
+                AddLog($"경고: {file.FileName}에 '{sheetName}' 시트가 없어 스킵합니다.");
+                ProgressBar.Value = i + 1;
+                continue;
+            }
 
             var outputPath = Path.Combine(outputFolder, BuildOutputFileName(file.Path, targetVersion));
             var options = BuildOptions(file.Path, targetVersion);
@@ -205,8 +242,8 @@ public partial class MainWindow : Window
             }
             catch (Exception ex)
             {
-                file.Status = "Failed";
-                AddLog($"오류: {file.FileName} - {ex.Message}");
+                file.Status = "Skipped";
+                AddLog($"경고: {file.FileName} 스킵 - {ex.Message}");
             }
 
             ProgressBar.Value = i + 1;
@@ -229,10 +266,7 @@ public partial class MainWindow : Window
 
     private ConvertOptions BuildOptions(string inputPath, AasVersion version)
     {
-        var setDate = _settings.UseFixedSetDate
-            ? _settings.FixedSetDate
-            : string.Empty;
-
+        var setDate = _settings.UseFixedSetDate ? _settings.FixedSetDate : string.Empty;
         return new ConvertOptions
         {
             Version = version,
@@ -249,6 +283,8 @@ public partial class MainWindow : Window
             DocumentDefaultOrganizationName = _settings.DefaultOrganizationName,
             DocumentDefaultOrganizationOfficialName = _settings.DefaultOrganizationOfficialName,
             WriteWarningsOnlyWhenNeeded = _settings.WriteWarningsOnlyWhenNeeded,
+            FillMissingCategoryWithConstant = _settings.FillMissingCategoryWithConstant,
+            MissingCategoryConstant = _settings.MissingCategoryConstant,
             InputFileName = Path.GetFileNameWithoutExtension(inputPath)
         };
     }
@@ -256,15 +292,10 @@ public partial class MainWindow : Window
     private static string BuildOutputFileName(string inputPath, AasVersion version)
     {
         var baseName = Path.GetFileNameWithoutExtension(inputPath);
-        return version == AasVersion.Aas3_0
-            ? $"{baseName}.aas3.xml"
-            : $"{baseName}.aas.xml";
+        return version == AasVersion.Aas3_0 ? $"{baseName}.aas3.xml" : $"{baseName}.aas.xml";
     }
 
-    private void CancelButton_Click(object sender, RoutedEventArgs e)
-    {
-        _cts?.Cancel();
-    }
+    private void CancelButton_Click(object sender, RoutedEventArgs e) => _cts?.Cancel();
 
     private void UpdateWarningsDisplay()
     {
@@ -286,57 +317,34 @@ public partial class MainWindow : Window
         RemoveButton.IsEnabled = enabled;
         ClearButton.IsEnabled = enabled;
         OutputFolderTextBox.IsEnabled = enabled;
-        SheetNameTextBox.IsEnabled = enabled;
+        SheetNameComboBox.IsEnabled = enabled;
         Aas3Radio.IsEnabled = enabled;
         Aas2Radio.IsEnabled = enabled;
         StartButton.IsEnabled = enabled;
         SettingsButton.IsEnabled = enabled;
     }
 
-    private void WarningsButton_Click(object sender, RoutedEventArgs e)
-    {
-        OpenPath(_lastWarningsPath);
-    }
-
-    private void OpenOutputFolderButton_Click(object sender, RoutedEventArgs e)
-    {
-        OpenPath(_lastOutputFolder);
-    }
-
-    private void OpenOutputFileButton_Click(object sender, RoutedEventArgs e)
-    {
-        OpenPath(_lastOutputFile);
-    }
+    private void WarningsButton_Click(object sender, RoutedEventArgs e) => OpenPath(_lastWarningsPath);
+    private void OpenOutputFolderButton_Click(object sender, RoutedEventArgs e) => OpenPath(_lastOutputFolder);
+    private void OpenOutputFileButton_Click(object sender, RoutedEventArgs e) => OpenPath(_lastOutputFile);
 
     private static void OpenPath(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-
+        if (string.IsNullOrWhiteSpace(path)) return;
         try
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = path,
-                UseShellExecute = true
-            });
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
         }
         catch
         {
-            // Ignore launch errors.
+            // ignore
         }
     }
-    
+
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         var viewModel = SettingsViewModel.FromSettings(_settings.Clone());
-        var dialog = new SettingsWindow(viewModel)
-        {
-            Owner = this
-        };
-
+        var dialog = new SettingsWindow(viewModel) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
             viewModel.ApplyTo(_settings);

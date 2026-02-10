@@ -36,7 +36,7 @@
                                 <TextBlock Text="{local:Loc Key=ClearButton}" />
                             </Button>
                         </StackPanel>
-                        <ListView x:Name="FilesListView" Grid.Row="2" Height="200" SelectionMode="Extended">
+                        <ListView x:Name="FilesListView" Grid.Row="2" Height="200" SelectionMode="Extended" SelectionChanged="FilesListView_SelectionChanged">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Header="{local:Loc Key=FileNameHeader}" DisplayMemberBinding="{Binding FileName}" Width="220" />
@@ -73,7 +73,7 @@
                         </StackPanel>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=SheetNameLabel}" />
-                        <TextBox x:Name="SheetNameTextBox" Grid.Row="1" Grid.Column="1" Text="사양시트" />
+                        <ComboBox x:Name="SheetNameComboBox" Grid.Row="1" Grid.Column="1" IsEditable="True" Text="사양시트" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=OutputFolderLabel}" />
                         <TextBox x:Name="OutputFolderTextBox" Grid.Row="2" Grid.Column="1" />
