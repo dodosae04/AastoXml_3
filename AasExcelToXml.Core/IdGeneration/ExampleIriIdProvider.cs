@@ -44,12 +44,12 @@ public sealed class ExampleIriIdProvider : IIdProvider
         });
     }
 
-    public string GetConceptDescriptionId(string idShort)
+    public string GetConceptDescriptionId(string conceptDescriptionIdShort)
     {
-        return GetOrCreate($"concept:{idShort}", seed =>
+        return GetOrCreate($"cd:{conceptDescriptionIdShort}", seed =>
         {
-            var hex = TakeHex(seed, 8);
-            return $"ConceptDescription---{hex}";
+            var digits = GetDigits(seed, 16);
+            return $"{_baseIri}/cd/{FormatDigits(digits)}";
         });
     }
 

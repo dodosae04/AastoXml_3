@@ -23,9 +23,9 @@ public sealed class UuidUrnIdProvider : IIdProvider
         return GetOrCreate($"aas:{aasIdShort}");
     }
 
-    public string GetConceptDescriptionId(string idShort)
+    public string GetConceptDescriptionId(string conceptDescriptionIdShort)
     {
-        return GetOrCreate($"concept:{idShort}");
+        return GetOrCreate($"cd:{conceptDescriptionIdShort}");
     }
 
     private string GetOrCreate(string seed)
