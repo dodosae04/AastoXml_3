@@ -212,6 +212,8 @@ public static class SpecGrouper
                 ValueType: "string",
                 Value: row.Value,
                 Uom: row.Uom,
+                ReferenceData: row.ReferenceData,
+                SemanticId: null,
                 ReferenceTarget: null,
                 Relationship: null,
                 Category: row.Category
@@ -232,6 +234,8 @@ public static class SpecGrouper
                 ValueType: "string",
                 Value: row.Value,
                 Uom: row.Uom,
+                ReferenceData: row.ReferenceData,
+                SemanticId: null,
                 ReferenceTarget: null,
                 Relationship: null,
                 ReferenceTargetAasIdShort: NormalizeAssetIdShort(target),
@@ -255,6 +259,8 @@ public static class SpecGrouper
                     ValueType: "string",
                     Value: row.Value,
                     Uom: row.Uom,
+                    ReferenceData: row.ReferenceData,
+                    SemanticId: null,
                     ReferenceTarget: null,
                     Relationship: relationship,
                     Category: row.Category
@@ -270,6 +276,8 @@ public static class SpecGrouper
                 ValueType: "string",
                 Value: row.Value,
                 Uom: row.Uom,
+                ReferenceData: row.ReferenceData,
+                SemanticId: null,
                 ReferenceTarget: NormalizeReferenceValue(entityTarget),
                 Relationship: null,
                 Category: row.Category
@@ -291,6 +299,8 @@ public static class SpecGrouper
                 ValueType: "string",
                 Value: row.Value,
                 Uom: row.Uom,
+                ReferenceData: row.ReferenceData,
+                SemanticId: null,
                 ReferenceTarget: null,
                 Relationship: relationship,
                 Category: row.Category
@@ -306,6 +316,8 @@ public static class SpecGrouper
             ValueType: NormalizeValueType(row.PropType),
             Value: row.Value,
             Uom: row.Uom,
+            ReferenceData: row.ReferenceData,
+            SemanticId: null,
             ReferenceTarget: null,
             Relationship: null,
             Category: row.Category

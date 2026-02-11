@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<InputFileItem> _files = new();
     private readonly ObservableCollection<string> _logs = new();
     private readonly ObservableCollection<string> _sheetNames = new();
+    private readonly ObservableCollection<string> _externalRefSheetNames = new();
     private AppSettings _settings = new();
     private CancellationTokenSource? _cts;
     private int _warningsCount;
@@ -36,6 +37,7 @@ public partial class MainWindow : Window
         FilesListView.ItemsSource = _files;
         LogListBox.ItemsSource = _logs;
         SheetNameComboBox.ItemsSource = _sheetNames;
+        ExternalRefSheetComboBox.ItemsSource = _externalRefSheetNames;
         LoadSettings();
     }
 
@@ -154,6 +156,51 @@ public partial class MainWindow : Window
         SheetNameComboBox.SelectedItem = preferred;
     }
 
+    private void ExternalRefBrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        ExternalRefFileTextBox.Text = dialog.FileName;
+        RefreshExternalReferenceSheets(dialog.FileName);
+    }
+
+    private void ExternalRefClearButton_Click(object sender, RoutedEventArgs e)
+    {
+        ExternalRefFileTextBox.Text = string.Empty;
+        _externalRefSheetNames.Clear();
+        ExternalRefSheetComboBox.Text = string.Empty;
+    }
+
+    private void RefreshExternalReferenceSheets(string path)
+    {
+        var names = ExcelSpecReader.GetWorksheetNames(path);
+        _externalRefSheetNames.Clear();
+        foreach (var name in names)
+        {
+            _externalRefSheetNames.Add(name);
+        }
+
+        if (_externalRefSheetNames.Count == 0)
+        {
+            ExternalRefSheetComboBox.Text = string.Empty;
+            return;
+        }
+
+        var preferred = _externalRefSheetNames.FirstOrDefault(name => string.Equals(name, "ExternalReferenceData", StringComparison.OrdinalIgnoreCase))
+            ?? _externalRefSheetNames.First();
+        ExternalRefSheetComboBox.Text = preferred;
+        ExternalRefSheetComboBox.SelectedItem = preferred;
+    }
+
     private void OutputBrowseButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFolderDialog { Title = "Select output folder" };
@@ -181,6 +228,14 @@ public partial class MainWindow : Window
         {
             AddLog("시트 이름을 선택하거나 입력하세요.");
             return;
+        }
+
+        var externalRefPath = ExternalRefFileTextBox.Text?.Trim();
+        var externalRefSheet = ExternalRefSheetComboBox.Text?.Trim();
+        if (string.IsNullOrWhiteSpace(externalRefPath) || string.IsNullOrWhiteSpace(externalRefSheet))
+        {
+            externalRefPath = null;
+            externalRefSheet = null;
         }
 
         var outputFolder = OutputFolderTextBox.Text?.Trim();
@@ -247,7 +302,7 @@ public partial class MainWindow : Window
 
             try
             {
-                var result = await Task.Run(() => Converter.Convert(file.Path, outputPath, sheetName, options));
+                var result = await Task.Run(() => Converter.Convert(file.Path, outputPath, sheetName, options, externalRefPath, externalRefSheet));
                 file.Status = "Done";
                 _warningsCount += result.Diagnostics.WarningCount;
                 _lastWarningsPath = result.Diagnostics.WarningCount > 0 ? result.WarningsPath : _lastWarningsPath;
@@ -359,6 +414,8 @@ public partial class MainWindow : Window
         ClearButton.IsEnabled = enabled;
         OutputFolderTextBox.IsEnabled = enabled;
         SheetNameComboBox.IsEnabled = enabled;
+        ExternalRefFileTextBox.IsEnabled = enabled;
+        ExternalRefSheetComboBox.IsEnabled = enabled;
         Aas3Radio.IsEnabled = enabled;
         Aas2Radio.IsEnabled = enabled;
         StartButton.IsEnabled = enabled;

@@ -55,6 +55,8 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="140" />
@@ -75,13 +77,24 @@
                         <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=SheetNameLabel}" />
                         <ComboBox x:Name="SheetNameComboBox" Grid.Row="1" Grid.Column="1" IsEditable="True" Text="사양시트" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=OutputFolderLabel}" />
-                        <TextBox x:Name="OutputFolderTextBox" Grid.Row="2" Grid.Column="1" />
-                        <Button Grid.Row="2" Grid.Column="2" Click="OutputBrowseButton_Click">
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="External Ref File" />
+                        <TextBox x:Name="ExternalRefFileTextBox" Grid.Row="2" Grid.Column="1" IsReadOnly="True" />
+                        <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                            <Button Width="80" Click="ExternalRefBrowseButton_Click">Browse...</Button>
+                            <Button Width="40" Margin="4,0,0,0" Click="ExternalRefClearButton_Click">Clear</Button>
+                        </StackPanel>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="External Ref Sheet" />
+                        <ComboBox x:Name="ExternalRefSheetComboBox" Grid.Row="3" Grid.Column="1" IsEditable="True" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="{local:Loc Key=OutputFolderLabel}" />
+                        <TextBox x:Name="OutputFolderTextBox" Grid.Row="4" Grid.Column="1" />
+                        <Button Grid.Row="4" Grid.Column="2" Click="OutputBrowseButton_Click">
                             <TextBlock Text="{local:Loc Key=BrowseButton}" />
                         </Button>
 
-                        <Button x:Name="StartButton" Grid.Row="3" Grid.Column="1" Width="160" Margin="0,12,0,0" HorizontalAlignment="Left" Click="StartButton_Click">
+                        <Button x:Name="StartButton" Grid.Row="5" Grid.Column="1" Width="160" Margin="0,12,0,0" HorizontalAlignment="Left" Click="StartButton_Click">
                             <TextBlock Text="{local:Loc Key=StartButton}" />
                         </Button>
                     </Grid>
@@ -90,6 +103,8 @@
                 <GroupBox Header="{local:Loc Key=Step3Title}">
                     <Grid Margin="12">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />

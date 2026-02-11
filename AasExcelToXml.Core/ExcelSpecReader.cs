@@ -35,6 +35,50 @@ public static class ExcelSpecReader
         };
     }
 
+    public static List<ExternalReferenceRow> ReadExternalReferenceRows(string excelPath, string sheetName, SpecDiagnostics diag)
+    {
+        using var wb = OpenWorkbookWithRetry(excelPath);
+        var ws = wb.Worksheets.FirstOrDefault(w => string.Equals(w.Name, sheetName, StringComparison.OrdinalIgnoreCase));
+        if (ws is null)
+        {
+            var candidates = string.Join(", ", wb.Worksheets.Select(w => w.Name));
+            throw new InvalidOperationException($"'{sheetName}' 시트를 찾을 수 없습니다. 사용 가능한 시트: {candidates}");
+        }
+
+        var headerRow = ws.FirstRowUsed();
+        if (headerRow is null)
+        {
+            throw new InvalidOperationException("헤더 행을 찾을 수 없습니다.");
+        }
+
+        var headerMap = headerRow.CellsUsed()
+            .Where(c => !string.IsNullOrWhiteSpace(c.GetString()))
+            .ToDictionary(c => ColumnResolver.NormalizeHeaderKey(c.GetString()), c => c.Address.ColumnNumber);
+
+        var columns = ResolveExternalReferenceColumns(headerMap);
+        var list = new List<ExternalReferenceRow>();
+
+        foreach (var row in ws.RowsUsed().Skip(1))
+        {
+            var idShort = row.Cell(columns.IdShort).GetString().Trim();
+            if (string.IsNullOrWhiteSpace(idShort))
+            {
+                diag.ExternalReferenceIssues.Add($"외부참조 시트 행 스킵: IdShort 누락 (행 {row.RowNumber()}).");
+                continue;
+            }
+
+            list.Add(new ExternalReferenceRow(
+                IdShort: idShort,
+                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty,
+                DescriptionLanguage: columns.DescriptionLanguage.HasValue ? row.Cell(columns.DescriptionLanguage.Value).GetString().Trim() : string.Empty,
+                Description: columns.Description.HasValue ? row.Cell(columns.Description.Value).GetString().Trim() : string.Empty,
+                IdentifiableId: columns.IdentifiableId.HasValue ? row.Cell(columns.IdentifiableId.Value).GetString().Trim() : string.Empty,
+                IsCaseOf: columns.IsCaseOf.HasValue ? row.Cell(columns.IsCaseOf.Value).GetString().Trim() : string.Empty));
+        }
+
+        return list;
+    }
+
     private static List<SpecRow> ReadXlsxRows(string xlsxPath, string? sheetName)
     {
         using var wb = OpenWorkbookWithRetry(xlsxPath);
@@ -75,7 +119,8 @@ public static class ExcelSpecReader
                 PropType: row.Cell(columns.PropertyType).GetString().Trim(),
                 Value: row.Cell(columns.Value).GetString().Trim(),
                 Uom: columns.Uom.HasValue ? row.Cell(columns.Uom.Value).GetString().Trim() : string.Empty,
-                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty
+                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty,
+                ReferenceData: columns.ReferenceData.HasValue ? row.Cell(columns.ReferenceData.Value).GetString().Trim() : string.Empty
             ));
         }
 
@@ -156,7 +201,8 @@ public static class ExcelSpecReader
                 PropType: csv.GetField(columns.PropertyType)?.Trim() ?? string.Empty,
                 Value: csv.GetField(columns.Value)?.Trim() ?? string.Empty,
                 Uom: columns.Uom.HasValue ? (csv.GetField(columns.Uom.Value)?.Trim() ?? string.Empty) : string.Empty,
-                Category: columns.Category.HasValue ? (csv.GetField(columns.Category.Value)?.Trim() ?? string.Empty) : string.Empty
+                Category: columns.Category.HasValue ? (csv.GetField(columns.Category.Value)?.Trim() ?? string.Empty) : string.Empty,
+                ReferenceData: columns.ReferenceData.HasValue ? (csv.GetField(columns.ReferenceData.Value)?.Trim() ?? string.Empty) : string.Empty
             ));
         }
 
@@ -193,7 +239,35 @@ public static class ExcelSpecReader
             PropertyType: Require("PropertyType"),
             Value: Require("Value"),
             Uom: Optional("UOM"),
-            Category: Optional("Category"));
+            Category: Optional("Category"),
+            ReferenceData: Optional("ReferenceData"));
+    }
+
+    private static ExternalReferenceColumnIndices ResolveExternalReferenceColumns(Dictionary<string, int> headerMap)
+    {
+        var settings = new SettingsXmlLoader().LoadOrCreate();
+        var resolver = new ColumnResolver(settings);
+        var columns = resolver.Resolve(headerMap);
+
+        int Require(string key)
+        {
+            if (columns.TryGetValue(key, out var idx))
+            {
+                return idx;
+            }
+
+            throw new InvalidOperationException($"필수 헤더를 찾을 수 없습니다: {key} (setting.xml 확인)");
+        }
+
+        int? Optional(string key) => columns.TryGetValue(key, out var idx) ? idx : null;
+
+        return new ExternalReferenceColumnIndices(
+            IdShort: Require("CD_IdShort"),
+            Category: Optional("CD_Category"),
+            DescriptionLanguage: Optional("CD_DescriptionLanguage"),
+            Description: Optional("CD_Description"),
+            IdentifiableId: Optional("CD_IdentifiableId"),
+            IsCaseOf: Optional("CD_IsCaseOf"));
     }
 
     private static bool IsEmptyRow(Func<int, string?> getValue, params int[] columns)
@@ -218,8 +292,17 @@ public static class ExcelSpecReader
         int PropertyType,
         int Value,
         int? Uom,
-        int? Category)
+        int? Category,
+        int? ReferenceData)
     {
         public int[] Required => new[] { Asset, Submodel, SubmodelCollection, PropertyKor, PropertyEng, PropertyType, Value };
     }
+
+    private readonly record struct ExternalReferenceColumnIndices(
+        int IdShort,
+        int? Category,
+        int? DescriptionLanguage,
+        int? Description,
+        int? IdentifiableId,
+        int? IsCaseOf);
 }
