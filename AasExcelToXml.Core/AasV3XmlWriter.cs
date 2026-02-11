@@ -461,12 +461,21 @@ public sealed class AasV3XmlWriter
             return null;
         }
 
-        var element = new XElement(_aasNs + "description");
-        foreach (var item in description)
+        var validItems = description
+            .Where(item => !string.IsNullOrWhiteSpace(item.Language))
+            .ToList();
+
+        if (validItems.Count == 0)
         {
-            element.Add(new XElement(_aasNs + "langString",
-                new XAttribute("lang", item.Language),
-                item.Text));
+            return null;
+        }
+
+        var element = new XElement(_aasNs + "description");
+        foreach (var item in validItems)
+        {
+            element.Add(new XElement(_aasNs + "langStringTextType",
+                new XElement(_aasNs + "language", item.Language),
+                new XElement(_aasNs + "text", item.Text ?? string.Empty)));
         }
 
         return element;
@@ -484,7 +493,7 @@ public sealed class AasV3XmlWriter
             new("GlobalReference", value, false, "IRI")
         });
 
-        return new XElement(_aasNs + "isCaseOf", BuildReferenceContent(referenceSpec));
+        return new XElement(_aasNs + "isCaseOf", BuildReference(referenceSpec));
     }
 
     private XElement? CreateCategoryElement(string? category)
