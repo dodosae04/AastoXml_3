@@ -49,6 +49,22 @@ public sealed class ExternalReferenceIntegrationTests
             var conceptDescriptions = doc.Descendants(ns + "conceptDescription").ToList();
             Assert.Equal(2, conceptDescriptions.Count);
 
+            foreach (var conceptDescription in conceptDescriptions)
+            {
+                var description = conceptDescription.Element(ns + "description");
+                Assert.NotNull(description);
+                Assert.Empty(description!.Elements(ns + "langString"));
+
+                var langStringTextType = description.Elements(ns + "langStringTextType").Single();
+                Assert.NotNull(langStringTextType.Element(ns + "language"));
+                Assert.NotNull(langStringTextType.Element(ns + "text"));
+            }
+
+            var millimetreCd = conceptDescriptions.Single(cd => string.Equals(cd.Element(ns + "idShort")?.Value, "CD_UOM_mm", StringComparison.Ordinal));
+            var isCaseOf = millimetreCd.Element(ns + "isCaseOf");
+            Assert.NotNull(isCaseOf);
+            Assert.Equal("reference", isCaseOf!.Elements().First().Name.LocalName);
+
             var property = doc.Descendants(ns + "property")
                 .First(p => string.Equals(p.Element(ns + "idShort")?.Value, "Payload", StringComparison.Ordinal));
             var key = property.Descendants(ns + "key").FirstOrDefault(k => string.Equals(k.Element(ns + "type")?.Value, "GlobalReference", StringComparison.Ordinal));
@@ -102,6 +118,7 @@ public sealed class ExternalReferenceIntegrationTests
         external.Cell(2, 3).Value = "en";
         external.Cell(2, 4).Value = "millimetre";
         external.Cell(2, 5).Value = "urn:cd:mm";
+        external.Cell(2, 6).Value = "http://data.15926.org/rdl/RDS1357739";
 
         external.Cell(3, 1).Value = "CD_UOM_kg";
         external.Cell(3, 2).Value = "CONSTANT";
