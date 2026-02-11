@@ -9,10 +9,30 @@ public record SpecRow(
     string PropType,
     string Value,
     string Uom,
-    string Category
+    string Category,
+    string ReferenceData = ""
 );
 
-public record AasEnvironmentSpec(List<AasSpec> Assets);
+public sealed record LangStringSpec(string Language, string Text);
+
+public sealed record ConceptDescriptionSpec(
+    string IdShort,
+    string Id,
+    string Category,
+    List<LangStringSpec> Description,
+    string? IsCaseOf = null
+);
+
+public sealed record ExternalReferenceRow(
+    string IdShort,
+    string Category,
+    string DescriptionLanguage,
+    string Description,
+    string IdentifiableId,
+    string IsCaseOf
+);
+
+public record AasEnvironmentSpec(List<AasSpec> Assets, List<ConceptDescriptionSpec>? ConceptDescriptions = null);
 
 public record AasSpec(string Name, string IdShort, List<SubmodelSpec> Submodels);
 
@@ -30,6 +50,8 @@ public record ElementSpec(
     string ValueType,
     string Value,
     string Uom,
+    string ReferenceData,
+    string? SemanticId,
     string? ReferenceTarget,
     RelationshipSpec? Relationship,
     string? Category = null,

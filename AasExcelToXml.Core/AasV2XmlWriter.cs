@@ -137,6 +137,11 @@ public sealed class AasV2XmlWriter
             }
         }
 
+        foreach (var conceptDescription in spec.ConceptDescriptions ?? Enumerable.Empty<ConceptDescriptionSpec>())
+        {
+            conceptDescriptionsElement.Add(BuildConceptDescription(conceptDescription));
+        }
+
         root.Add(shellsElement);
         root.Add(assetsElement);
         root.Add(submodelsElement);
@@ -236,7 +241,7 @@ public sealed class AasV2XmlWriter
             CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
-            CreateSemanticId(),
+            CreateSemanticId(element.SemanticId),
             CreateQualifiers(),
             new XElement(_aasNs + "valueType", element.ValueType),
             new XElement(_aasNs + "value", element.Value),
@@ -275,7 +280,7 @@ public sealed class AasV2XmlWriter
             CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
-            CreateSemanticId(),
+            CreateSemanticId(element.SemanticId),
             CreateQualifiers(),
             new XElement(_aasNs + "value",
                 new XElement(_aasNs + "keys",
@@ -293,7 +298,7 @@ public sealed class AasV2XmlWriter
             CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
-            CreateSemanticId(),
+            CreateSemanticId(element.SemanticId),
             CreateQualifiers(),
             new XElement(_aasNs + "entityType", "SelfManagedEntity"),
             element.ReferenceTarget is null
@@ -319,7 +324,7 @@ public sealed class AasV2XmlWriter
             CreateCategoryElement(element.Category),
             new XElement(_aasNs + "kind", "Instance"),
             CreateDescription(element.DisplayNameKo),
-            CreateSemanticId(),
+            CreateSemanticId(element.SemanticId),
             CreateQualifiers(),
             new XElement(_aasNs + "first",
                 new XElement(_aasNs + "keys",
@@ -373,11 +378,51 @@ public sealed class AasV2XmlWriter
         );
     }
 
-    private XElement CreateSemanticId()
+    private XElement CreateSemanticId(string? semanticId = null)
     {
-        return new XElement(_aasNs + "semanticId",
-            new XElement(_aasNs + "keys")
-        );
+        var keys = new XElement(_aasNs + "keys");
+        if (!string.IsNullOrWhiteSpace(semanticId))
+        {
+            keys.Add(CreateKey("GlobalReference", semanticId, local: false, idType: "IRI"));
+        }
+
+        return new XElement(_aasNs + "semanticId", keys);
+    }
+
+    private XElement? CreateDescription(List<LangStringSpec> description)
+    {
+        if (description.Count == 0)
+        {
+            return null;
+        }
+
+        var element = new XElement(_aasNs + "description");
+        foreach (var item in description)
+        {
+            element.Add(new XElement(_aasNs + "langString",
+                new XAttribute("lang", item.Language),
+                item.Text));
+        }
+
+        return element;
+    }
+
+    private XElement BuildConceptDescription(ConceptDescriptionSpec conceptDescription)
+    {
+        var element = new XElement(_aasNs + "conceptDescription",
+            new XElement(_aasNs + "idShort", conceptDescription.IdShort),
+            CreateCategoryElement(conceptDescription.Category),
+            CreateDescription(conceptDescription.Description),
+            CreateIdentification(conceptDescription.Id));
+
+        if (!string.IsNullOrWhiteSpace(conceptDescription.IsCaseOf))
+        {
+            element.Add(new XElement(_aasNs + "isCaseOf",
+                new XElement(_aasNs + "keys",
+                    CreateKey("GlobalReference", conceptDescription.IsCaseOf, local: false, idType: "IRI"))));
+        }
+
+        return element;
     }
 
     private XElement CreateQualifiers()
