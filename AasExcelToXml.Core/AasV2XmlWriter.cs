@@ -20,6 +20,7 @@ public sealed class AasV2XmlWriter
     private readonly SpecDiagnostics _diagnostics;
     private readonly IIdProvider _idProvider;
     private readonly DocumentIdGenerator _documentIdGenerator;
+    private HashSet<string> _conceptDescriptionIds = new(StringComparer.Ordinal);
 
     public AasV2XmlWriter(ConvertOptions options, SpecDiagnostics diagnostics, DocumentIdGenerator documentIdGenerator)
     {
@@ -41,6 +42,11 @@ public sealed class AasV2XmlWriter
     /// </remarks>
     public XDocument Write(AasEnvironmentSpec spec)
     {
+        _conceptDescriptionIds = (spec.ConceptDescriptions ?? Enumerable.Empty<ConceptDescriptionSpec>())
+            .Where(cd => !string.IsNullOrWhiteSpace(cd.Id))
+            .Select(cd => cd.Id.Trim())
+            .ToHashSet(StringComparer.Ordinal);
+
         var root = new XElement(_aasNs + "aasenv",
             new XAttribute(XNamespace.Xmlns + "aas", _aasNs),
             new XAttribute(XNamespace.Xmlns + "xsi", _xsiNs),
@@ -434,7 +440,10 @@ public sealed class AasV2XmlWriter
         var keys = new XElement(_aasNs + "keys");
         if (!string.IsNullOrWhiteSpace(semanticId))
         {
-            keys.Add(CreateKey("GlobalReference", semanticId, local: false, idType: "IRI"));
+            var isLocalConceptDescription = _conceptDescriptionIds.Contains(semanticId.Trim());
+            keys.Add(isLocalConceptDescription
+                ? CreateKey("ConceptDescription", semanticId, local: true, idType: "IRI")
+                : CreateKey("GlobalReference", semanticId, local: false, idType: "IRI"));
         }
 
         return new XElement(_aasNs + "semanticId", keys);
