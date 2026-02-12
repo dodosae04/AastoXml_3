@@ -21,6 +21,8 @@ public sealed class AasV3XmlWriter
     private readonly Aas3ElementOrderer _orderer;
     private readonly IIdProvider _idProvider;
     private readonly SubmodelSkeletonProfile? _submodelSkeletonProfile;
+    private Dictionary<string, string> _shellIdByAasIdShort = new(StringComparer.Ordinal);
+    private HashSet<string> _knownAasIdShorts = new(StringComparer.Ordinal);
 
     public AasV3XmlWriter(ConvertOptions options, SpecDiagnostics diagnostics, DocumentIdGenerator documentIdGenerator)
     {
@@ -46,6 +48,12 @@ public sealed class AasV3XmlWriter
     /// </remarks>
     public XDocument Write(AasEnvironmentSpec spec)
     {
+        _knownAasIdShorts = spec.Assets
+            .Select(asset => asset.IdShort)
+            .ToHashSet(StringComparer.Ordinal);
+        _shellIdByAasIdShort = spec.Assets
+            .ToDictionary(asset => asset.IdShort, asset => _idProvider.GetShellId(asset.IdShort), StringComparer.Ordinal);
+
         var root = new XElement(_aasNs + "environment",
             // AASX Package Explorer는 prefix가 있는 AAS3 환경을 제대로 읽지 못하므로 기본 네임스페이스로 출력한다.
             new XAttribute(XNamespace.Xmlns + "xsi", _xsiNs)
@@ -451,6 +459,34 @@ public sealed class AasV3XmlWriter
 
     private XElement BuildEntity(ElementSpec element)
     {
+        XElement? statementsElement = null;
+        if (!string.IsNullOrWhiteSpace(element.ReferenceTarget)
+            && _knownAasIdShorts.Contains(element.ReferenceTarget)
+            && _shellIdByAasIdShort.TryGetValue(element.ReferenceTarget, out var targetShellId))
+        {
+            var referenceSpec = new Aas3ReferenceSpec("ModelReference", new List<Aas3ReferenceKey>
+            {
+                new("AssetAdministrationShell", targetShellId, true, "IRI")
+            });
+
+            var referenceValueElement = _profile.Reference.ReferenceElementValueWrapsReference
+                ? new XElement(_aasNs + "value", BuildReference(referenceSpec))
+                : new XElement(_aasNs + "value", BuildReferenceContent(referenceSpec));
+
+            var statementChildren = new List<Aas3ChildElement>
+            {
+                new("idShort", new XElement(_aasNs + "idShort", "AAS")),
+                new("category", CreateCategoryElement("CONSTANT")),
+                new("description", CreateDescription("Jump to target AAS")),
+                new("semanticId", null),
+                new("qualifiers", null),
+                new("value", referenceValueElement)
+            };
+
+            statementsElement = new XElement(_aasNs + "statements",
+                _orderer.BuildElement("referenceElement", statementChildren));
+        }
+
         var children = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", element.IdShort)),
@@ -459,7 +495,8 @@ public sealed class AasV3XmlWriter
             new("semanticId", CreateElementSemanticId(element.SemanticId)),
             new("qualifiers", null),
             new("entityType", new XElement(_aasNs + "entityType", "SelfManagedEntity")),
-            new("globalAssetId", element.ReferenceTarget is null ? null : new XElement(_aasNs + "globalAssetId", _idProvider.GetAssetId(element.ReferenceTarget)))
+            new("globalAssetId", element.ReferenceTarget is null ? null : new XElement(_aasNs + "globalAssetId", _idProvider.GetAssetId(element.ReferenceTarget))),
+            new("statements", statementsElement)
         };
 
         return _orderer.BuildElement("entity", children);

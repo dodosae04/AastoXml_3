@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Xml.Linq;
 using AasExcelToXml.Core;
+using AasExcelToXml.Core.IdGeneration;
 using Xunit;
 
 namespace AasExcelToXml.Tests;
@@ -69,4 +70,52 @@ public sealed class Aas3WriterRegressionTests
 
         Assert.False(hasNestedReference);
     }
+
+    [Fact]
+    public void Write_Aas3_Entity_With_Known_ReferenceTarget_Adds_Jumpable_Statement()
+    {
+        var spec = new AasEnvironmentSpec(
+            new List<AasSpec>
+            {
+                new("Robot body", "Robot_body", new List<SubmodelSpec>
+                {
+                    new("General", "General", new List<ElementSpec>())
+                }),
+                new("Assembly", "Assembly", new List<SubmodelSpec>
+                {
+                    new("Assembly_information", "Assembly_information", new List<ElementSpec>
+                    {
+                        new(string.Empty, "Ent_Robot_body", "Entity", ElementKind.Entity, "string", string.Empty, string.Empty, string.Empty, null, "Robot_body", null)
+                    })
+                })
+            });
+
+        var options = new ConvertOptions { Version = AasVersion.Aas3_0 };
+        var diagnostics = new SpecDiagnostics();
+        var writer = new AasV3XmlWriter(options, diagnostics, new DocumentIdGenerator(64879470));
+        var doc = writer.Write(spec);
+
+        var idProvider = new ExampleIriIdProvider(options.BaseIri, options.ExampleIriDigitsMode);
+        var expectedShellId = idProvider.GetShellId("Robot_body");
+
+        var aasNs = (XNamespace)"https://admin-shell.io/aas/3/0";
+        var entity = doc
+            .Descendants(aasNs + "entity")
+            .Single(candidate => (string?)candidate.Element(aasNs + "idShort") == "Ent_Robot_body");
+
+        var key = entity
+            .Element(aasNs + "statements")?
+            .Element(aasNs + "referenceElement")?
+            .Element(aasNs + "value")?
+            .Element(aasNs + "keys")?
+            .Element(aasNs + "key");
+
+        Assert.NotNull(entity.Element(aasNs + "statements"));
+        Assert.NotNull(key);
+        Assert.Equal("AssetAdministrationShell", (string?)key!.Element(aasNs + "type"));
+        Assert.Equal(expectedShellId, (string?)key.Element(aasNs + "value"));
+        Assert.Equal("true", (string?)key.Element(aasNs + "local"));
+        Assert.Equal("IRI", (string?)key.Element(aasNs + "idType"));
+    }
+
 }
