@@ -25,6 +25,70 @@ public sealed class ExternalReferenceIntegrationTests
         }
     }
 
+
+    [Fact]
+    public void Convert_WithExternalReferenceMultiSheet_MergesConceptDescriptions()
+    {
+        var inputPath = CreateWorkbookWithMultiExternalSheets();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"aas-external-ref-multi-{Guid.NewGuid():N}.xml");
+
+        try
+        {
+            var result = Converter.Convert(
+                inputPath,
+                outputPath,
+                "사양시트",
+                new ConvertOptions { Version = AasVersion.Aas3_0 },
+                inputPath,
+                "ExternalReferenceData1;ExternalReferenceData2");
+
+            var doc = XDocument.Load(result.OutputPath);
+            XNamespace ns = "https://admin-shell.io/aas/3/0";
+            var conceptDescriptions = doc.Descendants(ns + "conceptDescription").ToList();
+            Assert.Equal(3, conceptDescriptions.Count);
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath);
+            }
+        }
+    }
+
+    [Fact]
+    public void Convert_WithExternalReferenceWildcard_LoadsOnlySheetsWithHeaders()
+    {
+        var inputPath = CreateWorkbookWithMultiExternalSheets();
+        var outputPath = Path.Combine(Path.GetTempPath(), $"aas-external-ref-all-{Guid.NewGuid():N}.xml");
+
+        try
+        {
+            var result = Converter.Convert(
+                inputPath,
+                outputPath,
+                "사양시트",
+                new ConvertOptions { Version = AasVersion.Aas3_0 },
+                inputPath,
+                "*");
+
+            var doc = XDocument.Load(result.OutputPath);
+            XNamespace ns = "https://admin-shell.io/aas/3/0";
+            var conceptDescriptions = doc.Descendants(ns + "conceptDescription").ToList();
+            Assert.Equal(3, conceptDescriptions.Count);
+            Assert.DoesNotContain(conceptDescriptions, cd => string.Equals(cd.Element(ns + "idShort")?.Value, "NoiseSheet", StringComparison.Ordinal));
+        }
+        finally
+        {
+            File.Delete(inputPath);
+            if (File.Exists(outputPath))
+            {
+                File.Delete(outputPath);
+            }
+        }
+    }
+
     [Fact]
     public void Convert_WithExternalReference_AssignsSemanticIdAndConceptDescriptions()
     {
@@ -79,6 +143,69 @@ public sealed class ExternalReferenceIntegrationTests
                 File.Delete(outputPath);
             }
         }
+    }
+
+
+    private static string CreateWorkbookWithMultiExternalSheets()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"external-ref-multi-{Guid.NewGuid():N}.xlsx");
+        using var wb = new XLWorkbook();
+
+        var main = wb.AddWorksheet("사양시트");
+        main.Cell(1, 1).Value = "Asset";
+        main.Cell(1, 2).Value = "Submodel";
+        main.Cell(1, 3).Value = "SubmodelCollection";
+        main.Cell(1, 4).Value = "Property_Kor";
+        main.Cell(1, 5).Value = "Property_Eng";
+        main.Cell(1, 6).Value = "Property type";
+        main.Cell(1, 7).Value = "Value";
+        main.Cell(1, 8).Value = "Reference_data";
+        main.Cell(2, 1).Value = "Robot";
+        main.Cell(2, 2).Value = "Operational Information";
+        main.Cell(2, 4).Value = "적재량";
+        main.Cell(2, 5).Value = "Payload";
+        main.Cell(2, 6).Value = "string";
+        main.Cell(2, 7).Value = "5";
+        main.Cell(2, 8).Value = "CD_UOM_mm";
+
+        void FillHeader(IXLWorksheet ws)
+        {
+            ws.Cell(1, 1).Value = "IdShort";
+            ws.Cell(1, 2).Value = "Category";
+            ws.Cell(1, 3).Value = "Description Language";
+            ws.Cell(1, 4).Value = "Description";
+            ws.Cell(1, 5).Value = "Identifiable ID";
+            ws.Cell(1, 6).Value = "isCaseOf";
+        }
+
+        var ext1 = wb.AddWorksheet("ExternalReferenceData1");
+        FillHeader(ext1);
+        ext1.Cell(2, 1).Value = "CD_UOM_mm";
+        ext1.Cell(2, 2).Value = "CONSTANT";
+        ext1.Cell(2, 3).Value = "en";
+        ext1.Cell(2, 4).Value = "millimetre";
+        ext1.Cell(2, 5).Value = "urn:cd:mm";
+
+        var ext2 = wb.AddWorksheet("ExternalReferenceData2");
+        FillHeader(ext2);
+        ext2.Cell(2, 1).Value = "CD_UOM_kg";
+        ext2.Cell(2, 2).Value = "CONSTANT";
+        ext2.Cell(2, 3).Value = "en";
+        ext2.Cell(2, 4).Value = "kilogram";
+        ext2.Cell(2, 5).Value = "urn:cd:kg";
+
+        ext2.Cell(3, 1).Value = "CD_UOM_s";
+        ext2.Cell(3, 2).Value = "CONSTANT";
+        ext2.Cell(3, 3).Value = "en";
+        ext2.Cell(3, 4).Value = "second";
+        ext2.Cell(3, 5).Value = "urn:cd:s";
+
+        var noise = wb.AddWorksheet("IgnoreMe");
+        noise.Cell(1, 1).Value = "something";
+        noise.Cell(2, 1).Value = "NoiseSheet";
+
+        wb.SaveAs(path);
+        return path;
     }
 
     private static string CreateWorkbook()

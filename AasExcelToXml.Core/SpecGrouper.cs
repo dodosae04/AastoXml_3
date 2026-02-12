@@ -47,10 +47,8 @@ public static class SpecGrouper
                 currentCol = string.Empty;
             }
 
-            if (!string.IsNullOrWhiteSpace(r.Collection))
-            {
-                currentCol = r.Collection;
-            }
+            var normalizedCollectionSegments = CollectionPathParser.Split(r.Collection, currentCol);
+            currentCol = CollectionPathParser.ToKey(normalizedCollectionSegments);
 
             normalized.Add(r with { Aas = currentAas, Submodel = currentSm, Collection = currentCol });
         }
@@ -176,7 +174,7 @@ public static class SpecGrouper
                 Submodels: a.Submodels.Select(sm =>
                     new SubmodelSpec(
                         Name: sm.DisplayName,
-                        IdShort: NormalizeIdShort(sm.Name),
+                        IdShort: IdShortNormalizer.Normalize(sm.Name),
                         Elements: sm.Elements,
                         Category: sm.Elements.Select(e => e.Category).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c))
                     )).ToList()
@@ -228,7 +226,7 @@ public static class SpecGrouper
             var name = referenceMatch.Groups["name"].Value.Trim();
             return new ElementSpec(
                 Collection: NormalizeCollectionIdShort(row.Collection),
-                IdShort: NormalizeIdShort(name),
+                IdShort: IdShortNormalizer.Normalize(name),
                 DisplayNameKo: displayName,
                 Kind: ElementKind.ReferenceElement,
                 ValueType: "string",
@@ -239,7 +237,7 @@ public static class SpecGrouper
                 ReferenceTarget: null,
                 Relationship: null,
                 ReferenceTargetAasIdShort: NormalizeAssetIdShort(target),
-                ReferenceTargetSubmodelHint: NormalizeIdShort(row.Submodel),
+                ReferenceTargetSubmodelHint: IdShortNormalizer.Normalize(row.Submodel),
                 Category: row.Category
             );
         }
@@ -374,7 +372,7 @@ public static class SpecGrouper
             return trimmed;
         }
 
-        return NormalizeIdShort(trimmed);
+        return IdShortNormalizer.Normalize(trimmed);
     }
 
     /// <summary>
@@ -402,7 +400,7 @@ public static class SpecGrouper
 
     private static string NormalizeAssetIdShort(string raw)
     {
-        return NormalizeIdShort(raw);
+        return IdShortNormalizer.Normalize(raw);
     }
 
     private static string NormalizeElementIdShort(SpecRow row, string raw)
@@ -413,7 +411,7 @@ public static class SpecGrouper
             return NormalizeAssetIdShort(raw);
         }
 
-        return NormalizeIdShort(raw);
+        return IdShortNormalizer.Normalize(raw);
     }
 
     private static string NormalizeValueType(string propType)
@@ -437,34 +435,6 @@ public static class SpecGrouper
         return "string";
     }
 
-    // idShort는 공백/특수문자에 취약하므로 안전한 문자로 정규화 필요
-    private static string NormalizeIdShort(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return "Unnamed";
-        }
-
-        var trimmed = raw.Trim();
-        var normalized = new string(trimmed.Select(ch =>
-            char.IsLetterOrDigit(ch) ? ch : '_'
-        ).ToArray());
-
-        normalized = Regex.Replace(normalized, "_{2,}", "_").Trim('_');
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            normalized = "Unnamed";
-        }
-
-        // idShort는 숫자로 시작하면 파서에서 문제가 발생할 수 있어 접두어를 붙인다
-        if (char.IsDigit(normalized[0]))
-        {
-            normalized = "_" + normalized;
-        }
-
-        return normalized;
-    }
-
     // Collection은 비어있을 때 "Unnamed"를 만들지 않도록 별도로 처리한다.
     private static string NormalizeCollectionIdShort(string raw)
     {
@@ -473,12 +443,12 @@ public static class SpecGrouper
             return string.Empty;
         }
 
-        return raw.Trim();
+        return CollectionPathParser.ToKey(CollectionPathParser.Split(raw));
     }
 
     private static string NormalizeSubmodelName(string name)
     {
-        return NormalizeIdShort(name);
+        return IdShortNormalizer.Normalize(name);
     }
 
     private sealed class AasBuilder
@@ -597,7 +567,7 @@ public static class SpecGrouper
             var aasIdShort = NormalizeAssetIdShort(aas.Name);
             foreach (var submodel in aas.Submodels)
             {
-                var submodelIdShort = NormalizeIdShort(submodel.Name);
+                var submodelIdShort = IdShortNormalizer.Normalize(submodel.Name);
                 for (var i = 0; i < submodel.Elements.Count; i++)
                 {
                     var element = submodel.Elements[i];
@@ -615,7 +585,7 @@ public static class SpecGrouper
 
                     var hint = element.ReferenceTargetSubmodelHint;
                     var preferred = !string.IsNullOrWhiteSpace(hint)
-                        ? targetAas.Submodels.FirstOrDefault(sm => string.Equals(NormalizeIdShort(sm.Name), hint, StringComparison.Ordinal)
+                        ? targetAas.Submodels.FirstOrDefault(sm => string.Equals(IdShortNormalizer.Normalize(sm.Name), hint, StringComparison.Ordinal)
                             && ContainsProperty(sm, element.IdShort))
                         : null;
 
@@ -628,7 +598,7 @@ public static class SpecGrouper
 
                     var resolved = new ResolvedReference(
                         targetAasIdShort,
-                        NormalizeIdShort(targetSubmodel.Name),
+                        IdShortNormalizer.Normalize(targetSubmodel.Name),
                         element.IdShort,
                         "Property");
                     submodel.Elements[i] = element with { ResolvedReference = resolved };

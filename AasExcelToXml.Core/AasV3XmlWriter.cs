@@ -148,24 +148,21 @@ public sealed class AasV3XmlWriter
         var filteredElements = elements.Where(e => e.Kind != ElementKind.DocumentationInput).ToList();
         var elementIdShorts = new HashSet<string>(filteredElements.Select(e => e.IdShort), StringComparer.Ordinal);
         var directElements = filteredElements.Where(e => string.IsNullOrWhiteSpace(e.Collection)).ToList();
-        var collectionMap = filteredElements
-            .Where(e => !string.IsNullOrWhiteSpace(e.Collection))
-            .GroupBy(e => e.Collection)
-            .ToDictionary(group => group.Key, group => group.ToList(), StringComparer.Ordinal);
+        var topNodes = BuildCollectionTree(filteredElements.Where(e => !string.IsNullOrWhiteSpace(e.Collection)));
 
         if (string.Equals(submodelIdShort, "Assembly_information", StringComparison.Ordinal))
         {
-            foreach (var collectionName in new[] { "PlanFiles", "PlanEntities" })
+            foreach (var priority in new[] { "PlanFiles", "PlanEntities" })
             {
-                collectionMap.TryGetValue(collectionName, out var groupElements);
-                var safeElements = groupElements ?? new List<ElementSpec>();
-                SubmodelSkeletonCollection? collectionSkeleton = null;
-                if (skeleton?.Collections.TryGetValue(collectionName, out var resolvedSkeleton) == true)
+                var node = topNodes.FirstOrDefault(candidate => string.Equals(candidate.IdShort, priority, StringComparison.Ordinal));
+                if (node is null)
                 {
-                    collectionSkeleton = resolvedSkeleton;
+                    yield return BuildSubmodelCollection(priority, priority, submodelId, elementIdShorts, Array.Empty<ElementSpec>(), skeleton);
+                    continue;
                 }
-                yield return BuildSubmodelCollection(collectionName, submodelId, elementIdShorts, safeElements, collectionSkeleton);
-                collectionMap.Remove(collectionName);
+
+                yield return BuildSubmodelCollection(node.IdShort, node.PathKey, submodelId, elementIdShorts, node.Elements, skeleton, node.Children.Values);
+                topNodes.Remove(node);
             }
         }
 
@@ -174,41 +171,120 @@ public sealed class AasV3XmlWriter
             yield return BuildElement(submodelId, element, elementIdShorts);
         }
 
-        foreach (var group in collectionMap)
+        foreach (var node in topNodes)
         {
-            SubmodelSkeletonCollection? collectionSkeleton = null;
-            if (skeleton?.Collections.TryGetValue(group.Key, out var resolvedSkeleton) == true)
-            {
-                collectionSkeleton = resolvedSkeleton;
-            }
-            yield return BuildSubmodelCollection(group.Key, submodelId, elementIdShorts, group.Value, collectionSkeleton);
+            yield return BuildSubmodelCollection(node.IdShort, node.PathKey, submodelId, elementIdShorts, node.Elements, skeleton, node.Children.Values);
         }
     }
 
-    private XElement BuildSubmodelCollection(string collectionIdShort, string submodelId, HashSet<string> elementIdShorts, IEnumerable<ElementSpec> elements, SubmodelSkeletonCollection? skeleton)
+    private List<CollectionNode> BuildCollectionTree(IEnumerable<ElementSpec> elements)
+    {
+        var topNodes = new List<CollectionNode>();
+        foreach (var element in elements)
+        {
+            var segments = CollectionPathParser.ParseCanonical(element.Collection);
+            if (segments.Count == 0)
+            {
+                continue;
+            }
+
+            var currentPath = new List<string>();
+            CollectionNode? parent = null;
+            foreach (var segment in segments)
+            {
+                currentPath.Add(segment);
+                var pathKey = string.Join("/", currentPath);
+                CollectionNode node;
+                if (parent is null)
+                {
+                    node = topNodes.FirstOrDefault(n => string.Equals(n.IdShort, segment, StringComparison.Ordinal)) ?? new CollectionNode(segment, pathKey);
+                    if (!topNodes.Contains(node)) topNodes.Add(node);
+                }
+                else
+                {
+                    if (!parent.Children.TryGetValue(segment, out node!))
+                    {
+                        node = new CollectionNode(segment, pathKey);
+                        parent.Children[segment] = node;
+                    }
+                }
+
+                parent = node;
+            }
+
+            parent!.Elements.Add(element);
+        }
+
+        return topNodes;
+    }
+
+    private XElement BuildSubmodelCollection(
+        string collectionIdShort,
+        string pathKey,
+        string submodelId,
+        HashSet<string> elementIdShorts,
+        IEnumerable<ElementSpec> elements,
+        SubmodelSkeleton? skeleton,
+        IEnumerable<CollectionNode>? children = null)
     {
         var elementList = elements.Select(e => BuildElement(submodelId, e, elementIdShorts)).ToList();
-        if (elementList.Count == 0 && skeleton?.Placeholders.Count > 0)
+        var childNodes = children?.ToList() ?? new List<CollectionNode>();
+        foreach (var child in childNodes)
         {
-            elementList.AddRange(skeleton.Placeholders.Select(BuildPlaceholderElement));
+            elementList.Add(BuildSubmodelCollection(child.IdShort, child.PathKey, submodelId, elementIdShorts, child.Elements, skeleton, child.Children.Values));
+        }
+
+        var collectionSkeleton = ResolveCollectionSkeleton(skeleton, pathKey, collectionIdShort);
+        if (elementList.Count == 0 && collectionSkeleton?.Placeholders.Count > 0)
+        {
+            elementList.AddRange(collectionSkeleton.Placeholders.Select(BuildPlaceholderElement));
         }
 
         var valueElement = elementList.Count > 0
             ? new XElement(_aasNs + "value", elementList)
             : null;
 
-        var descriptionElement = skeleton?.IncludeDescription == false ? null : CreateDescription(collectionIdShort);
-        var children = new List<Aas3ChildElement>
+        var descriptionElement = collectionSkeleton?.IncludeDescription == false ? null : CreateDescription(collectionIdShort);
+        var childrenElements = new List<Aas3ChildElement>
         {
             new("idShort", new XElement(_aasNs + "idShort", collectionIdShort)),
-            new("category", CreateCategoryElement(ResolveCollectionCategory(elements, skeleton))),
+            new("category", CreateCategoryElement(ResolveCollectionCategory(elements, collectionSkeleton))),
             new("description", descriptionElement),
-            new("semanticId", CreateSemanticId(skeleton?.SemanticId)),
+            new("semanticId", CreateSemanticId(collectionSkeleton?.SemanticId)),
             new("qualifiers", null),
             new("value", valueElement)
         };
 
-        return _orderer.BuildElement("submodelElementCollection", children);
+        return _orderer.BuildElement("submodelElementCollection", childrenElements);
+    }
+
+    private static SubmodelSkeletonCollection? ResolveCollectionSkeleton(SubmodelSkeleton? skeleton, string pathKey, string topLevel)
+    {
+        if (skeleton is null)
+        {
+            return null;
+        }
+
+        if (skeleton.Collections.TryGetValue(pathKey, out var byPath))
+        {
+            return byPath;
+        }
+
+        return skeleton.Collections.TryGetValue(topLevel, out var byTop) ? byTop : null;
+    }
+
+    private sealed class CollectionNode
+    {
+        public CollectionNode(string idShort, string pathKey)
+        {
+            IdShort = idShort;
+            PathKey = pathKey;
+        }
+
+        public string IdShort { get; }
+        public string PathKey { get; }
+        public Dictionary<string, CollectionNode> Children { get; } = new(StringComparer.Ordinal);
+        public List<ElementSpec> Elements { get; } = new();
     }
 
     private XElement? CreateSemanticId(SubmodelSkeletonReference? reference)

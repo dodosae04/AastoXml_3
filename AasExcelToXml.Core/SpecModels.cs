@@ -29,7 +29,8 @@ public sealed record ExternalReferenceRow(
     string DescriptionLanguage,
     string Description,
     string IdentifiableId,
-    string IsCaseOf
+    string IsCaseOf,
+    string SourceKey = ""
 );
 
 public record AasEnvironmentSpec(List<AasSpec> Assets, List<ConceptDescriptionSpec>? ConceptDescriptions = null);

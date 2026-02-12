@@ -161,7 +161,7 @@ public partial class MainWindow : Window
         var dialog = new OpenFileDialog
         {
             Filter = "Excel files (*.xlsx)|*.xlsx|All files (*.*)|*.*",
-            Multiselect = false
+            Multiselect = true
         };
 
         if (dialog.ShowDialog() != true)
@@ -169,8 +169,15 @@ public partial class MainWindow : Window
             return;
         }
 
-        ExternalRefFileTextBox.Text = dialog.FileName;
-        RefreshExternalReferenceSheets(dialog.FileName);
+        var selectedPaths = dialog.FileNames?.Where(path => !string.IsNullOrWhiteSpace(path)).ToArray() ?? Array.Empty<string>();
+        if (selectedPaths.Length == 0)
+        {
+            return;
+        }
+
+        var joined = string.Join(";", selectedPaths);
+        ExternalRefFileTextBox.Text = joined;
+        RefreshExternalReferenceSheets(joined);
     }
 
     private void ExternalRefClearButton_Click(object sender, RoutedEventArgs e)
@@ -182,23 +189,26 @@ public partial class MainWindow : Window
 
     private void RefreshExternalReferenceSheets(string path)
     {
-        var names = ExcelSpecReader.GetWorksheetNames(path);
+        var filePaths = (path ?? string.Empty)
+            .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(item => item.Trim())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
         _externalRefSheetNames.Clear();
-        foreach (var name in names)
+        _externalRefSheetNames.Add("(전체)");
+
+        if (filePaths.Count == 1)
         {
-            _externalRefSheetNames.Add(name);
+            foreach (var name in ExcelSpecReader.GetWorksheetNames(filePaths[0]))
+            {
+                _externalRefSheetNames.Add(name);
+            }
         }
 
-        if (_externalRefSheetNames.Count == 0)
-        {
-            ExternalRefSheetComboBox.Text = string.Empty;
-            return;
-        }
-
-        var preferred = _externalRefSheetNames.FirstOrDefault(name => string.Equals(name, "ExternalReferenceData", StringComparison.OrdinalIgnoreCase))
-            ?? _externalRefSheetNames.First();
-        ExternalRefSheetComboBox.Text = preferred;
-        ExternalRefSheetComboBox.SelectedItem = preferred;
+        ExternalRefSheetComboBox.Text = "(전체)";
+        ExternalRefSheetComboBox.SelectedItem = "(전체)";
     }
 
     private void OutputBrowseButton_Click(object sender, RoutedEventArgs e)
