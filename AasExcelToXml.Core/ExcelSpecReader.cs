@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ClosedXML.Excel;
 using CsvHelper;
@@ -8,6 +9,8 @@ namespace AasExcelToXml.Core;
 
 public static class ExcelSpecReader
 {
+    private static readonly string[] ExternalReferenceAllTokens = { "*", "ALL", "(전체)", "전체" };
+
     public static List<string> GetWorksheetNames(string excelPath)
     {
         if (!File.Exists(excelPath) || !string.Equals(Path.GetExtension(excelPath), ".xlsx", StringComparison.OrdinalIgnoreCase))
@@ -45,38 +48,41 @@ public static class ExcelSpecReader
             throw new InvalidOperationException($"'{sheetName}' 시트를 찾을 수 없습니다. 사용 가능한 시트: {candidates}");
         }
 
-        var headerRow = ws.FirstRowUsed();
-        if (headerRow is null)
+        return ReadExternalReferenceRowsFromWorksheet(ws, excelPath, diag);
+    }
+
+    public static List<ExternalReferenceRow> ReadExternalReferenceRowsMulti(string externalRefExcelPath, string externalRefSheetName, SpecDiagnostics diag)
+    {
+        var files = SplitMultiValues(externalRefExcelPath).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var sheetTokens = SplitMultiValues(externalRefSheetName).ToList();
+        if (files.Count == 0 || sheetTokens.Count == 0)
         {
-            throw new InvalidOperationException("헤더 행을 찾을 수 없습니다.");
+            return new List<ExternalReferenceRow>();
         }
 
-        var headerMap = headerRow.CellsUsed()
-            .Where(c => !string.IsNullOrWhiteSpace(c.GetString()))
-            .ToDictionary(c => ColumnResolver.NormalizeHeaderKey(c.GetString()), c => c.Address.ColumnNumber);
+        var loadAllSheets = sheetTokens.Any(IsExternalReferenceAllToken);
+        var allRows = new List<ExternalReferenceRow>();
 
-        var columns = ResolveExternalReferenceColumns(headerMap);
-        var list = new List<ExternalReferenceRow>();
-
-        foreach (var row in ws.RowsUsed().Skip(1))
+        foreach (var file in files)
         {
-            var idShort = row.Cell(columns.IdShort).GetString().Trim();
-            if (string.IsNullOrWhiteSpace(idShort))
+            if (!File.Exists(file))
             {
-                diag.ExternalReferenceIssues.Add($"외부참조 시트 행 스킵: IdShort 누락 (행 {row.RowNumber()}).");
+                diag.ExternalReferenceIssues.Add($"외부참조 파일을 찾을 수 없어 건너뜀: {file}");
                 continue;
             }
 
-            list.Add(new ExternalReferenceRow(
-                IdShort: idShort,
-                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty,
-                DescriptionLanguage: columns.DescriptionLanguage.HasValue ? row.Cell(columns.DescriptionLanguage.Value).GetString().Trim() : string.Empty,
-                Description: columns.Description.HasValue ? row.Cell(columns.Description.Value).GetString().Trim() : string.Empty,
-                IdentifiableId: columns.IdentifiableId.HasValue ? row.Cell(columns.IdentifiableId.Value).GetString().Trim() : string.Empty,
-                IsCaseOf: columns.IsCaseOf.HasValue ? row.Cell(columns.IsCaseOf.Value).GetString().Trim() : string.Empty));
+            using var workbook = OpenWorkbookWithRetry(file);
+            var worksheets = loadAllSheets
+                ? workbook.Worksheets.Where(HasExternalReferenceHeader).ToList()
+                : ResolveRequestedSheets(workbook, sheetTokens, diag, file);
+
+            foreach (var worksheet in worksheets)
+            {
+                allRows.AddRange(ReadExternalReferenceRowsFromWorksheet(worksheet, file, diag));
+            }
         }
 
-        return list;
+        return allRows;
     }
 
     private static List<SpecRow> ReadXlsxRows(string xlsxPath, string? sheetName)
@@ -110,10 +116,15 @@ public static class ExcelSpecReader
                 continue;
             }
 
+            var collection = ResolveCollectionValue(
+                headerMap,
+                index => row.Cell(index).GetString(),
+                columns.SubmodelCollection);
+
             list.Add(new SpecRow(
                 Aas: row.Cell(columns.Asset).GetString().Trim(),
                 Submodel: row.Cell(columns.Submodel).GetString().Trim(),
-                Collection: row.Cell(columns.SubmodelCollection).GetString().Trim(),
+                Collection: collection,
                 PropKor: row.Cell(columns.PropertyKor).GetString().Trim(),
                 PropEng: row.Cell(columns.PropertyEng).GetString().Trim(),
                 PropType: row.Cell(columns.PropertyType).GetString().Trim(),
@@ -192,10 +203,15 @@ public static class ExcelSpecReader
                 continue;
             }
 
+            var collection = ResolveCollectionValue(
+                headerMap,
+                index => csv.GetField(index),
+                columns.SubmodelCollection);
+
             list.Add(new SpecRow(
                 Aas: csv.GetField(columns.Asset)?.Trim() ?? string.Empty,
                 Submodel: csv.GetField(columns.Submodel)?.Trim() ?? string.Empty,
-                Collection: csv.GetField(columns.SubmodelCollection)?.Trim() ?? string.Empty,
+                Collection: collection,
                 PropKor: csv.GetField(columns.PropertyKor)?.Trim() ?? string.Empty,
                 PropEng: csv.GetField(columns.PropertyEng)?.Trim() ?? string.Empty,
                 PropType: csv.GetField(columns.PropertyType)?.Trim() ?? string.Empty,
@@ -281,6 +297,132 @@ public static class ExcelSpecReader
         }
 
         return true;
+    }
+
+    private static string ResolveCollectionValue(
+        IReadOnlyDictionary<string, int> headerMap,
+        Func<int, string?> readValue,
+        int fallbackCollectionColumn)
+    {
+        var multiColumns = headerMap
+            .Where(item => IsCollectionLevelColumn(item.Key))
+            .OrderBy(item => ExtractTrailingNumber(item.Key))
+            .ThenBy(item => item.Key, StringComparer.Ordinal)
+            .Select(item => item.Value)
+            .ToList();
+
+        if (multiColumns.Count > 0)
+        {
+            var segments = multiColumns
+                .Select(index => (readValue(index) ?? string.Empty).Trim())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .ToList();
+
+            if (segments.Count > 0)
+            {
+                return string.Join(">", segments);
+            }
+        }
+
+        return (readValue(fallbackCollectionColumn) ?? string.Empty).Trim();
+    }
+
+    private static bool IsCollectionLevelColumn(string normalizedHeader)
+    {
+        var header = normalizedHeader.Trim().ToLowerInvariant();
+        return Regex.IsMatch(header, "^(submodelcollection|collection)\\d+$");
+    }
+
+    private static int ExtractTrailingNumber(string normalizedHeader)
+    {
+        var match = Regex.Match(normalizedHeader, "(\\d+)$");
+        return match.Success && int.TryParse(match.Value, out var number) ? number : int.MaxValue;
+    }
+
+    private static bool IsExternalReferenceAllToken(string value)
+    {
+        return ExternalReferenceAllTokens.Any(token => string.Equals(token, value.Trim(), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static IEnumerable<string> SplitMultiValues(string input)
+    {
+        return (input ?? string.Empty)
+            .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => value.Trim())
+            .Where(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    private static List<IXLWorksheet> ResolveRequestedSheets(XLWorkbook workbook, List<string> requestedSheets, SpecDiagnostics diag, string file)
+    {
+        var result = new List<IXLWorksheet>();
+        foreach (var requested in requestedSheets)
+        {
+            var worksheet = workbook.Worksheets.FirstOrDefault(ws => string.Equals(ws.Name, requested, StringComparison.OrdinalIgnoreCase));
+            if (worksheet is null)
+            {
+                diag.ExternalReferenceIssues.Add($"외부참조 시트 없음: 파일={file}, 시트={requested}");
+                continue;
+            }
+
+            result.Add(worksheet);
+        }
+
+        return result;
+    }
+
+    private static bool HasExternalReferenceHeader(IXLWorksheet worksheet)
+    {
+        var headerRow = worksheet.FirstRowUsed();
+        if (headerRow is null)
+        {
+            return false;
+        }
+
+        var headerMap = headerRow.CellsUsed()
+            .Where(c => !string.IsNullOrWhiteSpace(c.GetString()))
+            .ToDictionary(c => ColumnResolver.NormalizeHeaderKey(c.GetString()), c => c.Address.ColumnNumber);
+
+        try
+        {
+            var columns = ResolveExternalReferenceColumns(headerMap);
+            return columns.IdShort > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static List<ExternalReferenceRow> ReadExternalReferenceRowsFromWorksheet(IXLWorksheet ws, string sourceFilePath, SpecDiagnostics diag)
+    {
+        var headerRow = ws.FirstRowUsed() ?? throw new InvalidOperationException("헤더 행을 찾을 수 없습니다.");
+        var headerMap = headerRow.CellsUsed()
+            .Where(c => !string.IsNullOrWhiteSpace(c.GetString()))
+            .ToDictionary(c => ColumnResolver.NormalizeHeaderKey(c.GetString()), c => c.Address.ColumnNumber);
+
+        var columns = ResolveExternalReferenceColumns(headerMap);
+        var list = new List<ExternalReferenceRow>();
+        foreach (var row in ws.RowsUsed().Skip(1))
+        {
+            var idShort = row.Cell(columns.IdShort).GetString().Trim();
+            if (string.IsNullOrWhiteSpace(idShort))
+            {
+                diag.ExternalReferenceIssues.Add($"외부참조 시트 행 스킵: IdShort 누락 (시트={ws.Name}, 행 {row.RowNumber()}).");
+                continue;
+            }
+
+            var sourceKey = $"{Path.GetFileName(sourceFilePath)}::{ws.Name}::{row.RowNumber()}";
+            list.Add(new ExternalReferenceRow(
+                IdShort: idShort,
+                Category: columns.Category.HasValue ? row.Cell(columns.Category.Value).GetString().Trim() : string.Empty,
+                DescriptionLanguage: columns.DescriptionLanguage.HasValue ? row.Cell(columns.DescriptionLanguage.Value).GetString().Trim() : string.Empty,
+                Description: columns.Description.HasValue ? row.Cell(columns.Description.Value).GetString().Trim() : string.Empty,
+                IdentifiableId: columns.IdentifiableId.HasValue ? row.Cell(columns.IdentifiableId.Value).GetString().Trim() : string.Empty,
+                IsCaseOf: columns.IsCaseOf.HasValue ? row.Cell(columns.IsCaseOf.Value).GetString().Trim() : string.Empty,
+                SourceKey: sourceKey));
+        }
+
+        return list;
     }
 
     private readonly record struct ColumnIndices(

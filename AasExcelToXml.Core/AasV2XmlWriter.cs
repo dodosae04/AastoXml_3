@@ -158,25 +158,21 @@ public sealed class AasV2XmlWriter
         var filteredElements = elements.Where(e => e.Kind != ElementKind.DocumentationInput).ToList();
         var elementIdShorts = new HashSet<string>(filteredElements.Select(e => e.IdShort), StringComparer.Ordinal);
         var directElements = filteredElements.Where(e => string.IsNullOrWhiteSpace(e.Collection)).ToList();
-        var collectionMap = filteredElements
-            .Where(e => !string.IsNullOrWhiteSpace(e.Collection))
-            .GroupBy(e => e.Collection)
-            .ToDictionary(group => group.Key, group => group.ToList(), StringComparer.Ordinal);
+        var topNodes = BuildCollectionTree(filteredElements.Where(e => !string.IsNullOrWhiteSpace(e.Collection)));
 
         if (string.Equals(submodelIdShort, "Assembly_information", StringComparison.Ordinal))
         {
-            foreach (var collectionName in new[] { "PlanFiles", "PlanEntities" })
+            foreach (var priority in new[] { "PlanFiles", "PlanEntities" })
             {
-                collectionMap.TryGetValue(collectionName, out var groupElements);
-                var safeElements = groupElements ?? new List<ElementSpec>();
-                yield return WrapSubmodelElement(BuildSubmodelCollection(
-                    aasIdShort,
-                    submodelIdShort,
-                    collectionName,
-                    safeElements,
-                    elementIdShorts,
-                    referenceIndex));
-                collectionMap.Remove(collectionName);
+                var node = topNodes.FirstOrDefault(candidate => string.Equals(candidate.IdShort, priority, StringComparison.Ordinal));
+                if (node is null)
+                {
+                    yield return WrapSubmodelElement(BuildSubmodelCollection(aasIdShort, submodelIdShort, priority, elementIdShorts, referenceIndex, Array.Empty<ElementSpec>(), null));
+                    continue;
+                }
+
+                yield return WrapSubmodelElement(BuildSubmodelCollection(aasIdShort, submodelIdShort, node.IdShort, elementIdShorts, referenceIndex, node.Elements, node.Children.Values));
+                topNodes.Remove(node);
             }
         }
 
@@ -185,27 +181,72 @@ public sealed class AasV2XmlWriter
             yield return WrapSubmodelElement(BuildElement(aasIdShort, submodelIdShort, element, elementIdShorts, referenceIndex));
         }
 
-        foreach (var group in collectionMap)
+        foreach (var node in topNodes)
         {
-            yield return WrapSubmodelElement(BuildSubmodelCollection(
-                aasIdShort,
-                submodelIdShort,
-                group.Key,
-                group.Value,
-                elementIdShorts,
-                referenceIndex));
+            yield return WrapSubmodelElement(BuildSubmodelCollection(aasIdShort, submodelIdShort, node.IdShort, elementIdShorts, referenceIndex, node.Elements, node.Children.Values));
         }
+    }
+
+    private List<CollectionNode> BuildCollectionTree(IEnumerable<ElementSpec> elements)
+    {
+        var topNodes = new List<CollectionNode>();
+        foreach (var element in elements)
+        {
+            var segments = CollectionPathParser.ParseCanonical(element.Collection);
+            if (segments.Count == 0)
+            {
+                continue;
+            }
+
+            var currentPath = new List<string>();
+            CollectionNode? parent = null;
+            foreach (var segment in segments)
+            {
+                currentPath.Add(segment);
+                var pathKey = string.Join("/", currentPath);
+                CollectionNode node;
+                if (parent is null)
+                {
+                    node = topNodes.FirstOrDefault(n => string.Equals(n.IdShort, segment, StringComparison.Ordinal)) ?? new CollectionNode(segment, pathKey);
+                    if (!topNodes.Contains(node)) topNodes.Add(node);
+                }
+                else
+                {
+                    if (!parent.Children.TryGetValue(segment, out node!))
+                    {
+                        node = new CollectionNode(segment, pathKey);
+                        parent.Children[segment] = node;
+                    }
+                }
+
+                parent = node;
+            }
+
+            parent!.Elements.Add(element);
+        }
+
+        return topNodes;
     }
 
     private XElement BuildSubmodelCollection(
         string aasIdShort,
         string submodelIdShort,
         string collectionIdShort,
-        IEnumerable<ElementSpec> elements,
         HashSet<string> elementIdShorts,
-        ReferenceIndex referenceIndex)
+        ReferenceIndex referenceIndex,
+        IEnumerable<ElementSpec> elements,
+        IEnumerable<CollectionNode>? children)
     {
         var collectionCategory = elements.Select(e => e.Category).FirstOrDefault(c => !string.IsNullOrWhiteSpace(c));
+
+        var valueElements = elements
+            .Select(e => WrapSubmodelElement(BuildElement(aasIdShort, submodelIdShort, e, elementIdShorts, referenceIndex)))
+            .ToList();
+
+        foreach (var child in children ?? Enumerable.Empty<CollectionNode>())
+        {
+            valueElements.Add(WrapSubmodelElement(BuildSubmodelCollection(aasIdShort, submodelIdShort, child.IdShort, elementIdShorts, referenceIndex, child.Elements, child.Children.Values)));
+        }
 
         return new XElement(_aasNs + "submodelElementCollection",
             new XElement(_aasNs + "idShort", collectionIdShort),
@@ -216,10 +257,20 @@ public sealed class AasV2XmlWriter
             CreateDescription(collectionIdShort),
             CreateSemanticId(),
             CreateQualifiers(),
-            new XElement(_aasNs + "value",
-                elements.Select(e => WrapSubmodelElement(BuildElement(aasIdShort, submodelIdShort, e, elementIdShorts, referenceIndex)))
-            )
+            new XElement(_aasNs + "value", valueElements)
         );
+    }
+
+    private sealed class CollectionNode
+    {
+        public CollectionNode(string idShort, string pathKey)
+        {
+            IdShort = idShort;
+        }
+
+        public string IdShort { get; }
+        public Dictionary<string, CollectionNode> Children { get; } = new(StringComparer.Ordinal);
+        public List<ElementSpec> Elements { get; } = new();
     }
 
     private XElement BuildElement(string aasIdShort, string submodelIdShort, ElementSpec element, HashSet<string> elementIdShorts, ReferenceIndex referenceIndex)
