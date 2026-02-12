@@ -110,7 +110,7 @@ public static class SpecGrouper
                         var normalizedTarget = NormalizeReferenceValue(element.ReferenceTarget);
                         if (!string.IsNullOrWhiteSpace(normalizedTarget) && !IsIri(normalizedTarget))
                         {
-                            var resolved = ResolveCanonicalName(aasNames, normalizedTarget);
+                            var resolved = ResolveCanonicalName(aasNames, normalizedTarget, maxDistance: 2);
                             if (!string.IsNullOrWhiteSpace(resolved))
                             {
                                 element = element with { ReferenceTarget = resolved };
@@ -131,7 +131,7 @@ public static class SpecGrouper
                         var correctedSecond = second;
                         if (!string.IsNullOrWhiteSpace(first))
                         {
-                            var resolved = ResolveCanonicalName(entityIdShorts, first);
+                            var resolved = ResolveCanonicalName(entityIdShorts, first, maxDistance: 1);
                             if (!string.IsNullOrWhiteSpace(resolved))
                             {
                                 correctedFirst = resolved;
@@ -144,7 +144,7 @@ public static class SpecGrouper
 
                         if (!string.IsNullOrWhiteSpace(second))
                         {
-                            var resolved = ResolveCanonicalName(entityIdShorts, second);
+                            var resolved = ResolveCanonicalName(entityIdShorts, second, maxDistance: 1);
                             if (!string.IsNullOrWhiteSpace(resolved))
                             {
                                 correctedSecond = resolved;
@@ -516,7 +516,7 @@ public static class SpecGrouper
         return result;
     }
 
-    private static string? ResolveCanonicalName(IEnumerable<string> candidates, string input)
+    private static string? ResolveCanonicalName(IEnumerable<string> candidates, string input, int maxDistance = 1)
     {
         if (string.IsNullOrWhiteSpace(input))
         {
@@ -540,8 +540,8 @@ public static class SpecGrouper
         var bestCount = 0;
         foreach (var candidate in candidates)
         {
-            var distance = LevenshteinDistance(normalizedInput, NormalizeMatchKey(candidate), 1);
-            if (distance <= 1)
+            var distance = LevenshteinDistance(normalizedInput, NormalizeMatchKey(candidate), maxDistance);
+            if (distance <= maxDistance)
             {
                 if (distance < bestDistance)
                 {
