@@ -24,7 +24,7 @@ public sealed class AppSettings
     public string DefaultOrganizationOfficialName { get; set; } = "Hanuri";
     public bool WriteWarningsOnlyWhenNeeded { get; set; } = true;
     public bool FillMissingCategoryWithConstant { get; set; }
-    public string MissingCategoryConstant { get; set; } = "PARAMETER";
+    public string MissingCategoryConstant { get; set; } = "CONSTANT";
 
     public AppSettings Clone()
     {

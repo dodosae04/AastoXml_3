@@ -1,11 +1,4 @@
 <Solution>
   <Project Path="AasExcelToXml.Wpf/AasExcelToXml.Wpf.csproj" />
-  <Project Path="AasExcelToXml.Cli/AasExcelToXml.Cli.csproj" />
   <Project Path="AasExcelToXml.Core/AasExcelToXml.Core.csproj" />
-  <Project Path="AasExcelToXml.Tests/AasExcelToXml.Tests.csproj" />
-  <Project Path="tools/AasGoldenInspector/AasGoldenInspector.csproj" />
-  <Project Path="tools/AasGoldenDiff/AasGoldenDiff.csproj" />
-  <Project Path="tools/ExtractGoldenDocProfile/ExtractGoldenDocProfile.csproj" />
-  <Project Path="tools/ExtractGoldenAas3Profile/ExtractGoldenAas3Profile.csproj" />
-  <Project Path="tools/ExtractGoldenTemplates/ExtractGoldenTemplates.csproj" />
 </Solution>

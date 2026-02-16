@@ -26,7 +26,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private string _defaultOrganizationOfficialName = "Hanuri";
     private bool _writeWarningsOnlyWhenNeeded = true;
     private bool _fillMissingCategoryWithConstant;
-    private string _missingCategoryConstant = "PARAMETER";
+    private string _missingCategoryConstant = "CONSTANT";
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
